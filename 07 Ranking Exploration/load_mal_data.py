@@ -25,7 +25,7 @@ from sklearn import set_config
 set_config(transform_output='pandas');
 def load_anime()->Tuple[pd.DataFrame,int,int]:
 	select_columns:List[str] = [
-		'anime_id', 'airing'
+		'anime_id', 'airing',
 	]
 	frame:pd.DataFrame = pd.read_csv(data_anime_info, usecols=select_columns)
 	total_anime:int = frame.shape[0]
@@ -46,7 +46,7 @@ def load_rankings(anime_frame:pd.DataFrame|None = None, read_nrows:int|None=None
 		'my_watched_episodes',
 		'my_score',
 		'my_status',
-		'my_last_updated'
+		# 'my_last_updated'
 	]
 	frame:pd.DataFrame = pd.read_csv(data_ranking_info, usecols=select_columns,nrows=read_nrows)
 	# Remove series found in this data.
@@ -59,6 +59,20 @@ def load_rankings(anime_frame:pd.DataFrame|None = None, read_nrows:int|None=None
 		print('left:', rankings_left)
 	# Status cannot be greater than  6 or less than 1, some data is.
 	frame.drop(index=frame[(frame['my_status']>6) | (frame['my_status']<1)].index,inplace=True)
+	anime_eps = get_anime_episodes() # TODO move into load_anime() pipeline... restructure  the previous if to accomodate.
+	frame = frame.merge(anime_eps, on='anime_id', how='left')
+	frame['ratio_watched'] = frame['my_watched_episodes'] / frame['anime_episodes']
+	frame.loc[frame['ratio_watched']>1, 'ratio_watched'] = 1.0
+	return frame
+
+def get_anime_episodes()->pd.DataFrame:
+	frame =  pd.read_csv(
+		filepath_or_buffer=data_anime_info,
+		usecols=['anime_id', 'episodes']
+	)
+	frame.rename(columns={
+		'episodes':'anime_episodes'
+	},inplace=True)
 	return frame
 
 df:pd.DataFrame = load_rankings(anime_frame)
@@ -66,6 +80,26 @@ print('loaded rankings')
 # print(df.info())
 # print (df.head())
 print(df.describe())
+
+# tdf = df.drop(columns=['username','my_watched_episodes'])
+# group = tdf.groupby(by=['username'])
+# users_watched = group.cumsum()
+# users_watched.info()
+# users_watched.head()
+# users_watched.describe()
+fig_0705,ax = plt.subplots()
+data_by_user = df.groupby(by=['username'])
+user_shows_watched = data_by_user['anime_id'].count()
+user_shows_watched.rename('shows_watched', inplace=True)
+
+user_avg_rating = data_by_user['my_score'].mean()
+user_avg_rating.rename('avg_rating', inplace=True)
+
+user_summary = pd.merge(left=user_avg_rating,right=user_shows_watched, how='left', on='username')
+user_summary.info()
+user_summary.plot.scatter(x='avg_rating', y='shows_watched')
+# Plot Average Rating, by [User, Shows Watched]
+exit()
 
 fig_0701,ax = plt.subplots()
 df.boxplot(column=['my_score'], ax=ax)

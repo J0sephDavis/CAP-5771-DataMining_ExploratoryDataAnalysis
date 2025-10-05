@@ -3,6 +3,7 @@ __pycache__/
 *.env
 *.jpg
 *.png
+*.tiff
 
 *.csv
 *.zip

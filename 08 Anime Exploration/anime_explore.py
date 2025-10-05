@@ -37,7 +37,7 @@ def load_anime(nrows:int|None=None)->pd.DataFrame:
 	# Calculate Column	
 	frame['fav_per_member'] = frame['favorites'] / frame['members']
 	return frame
-df = load_anime()
+df = load_anime(1000)
 print(df.info())
 print()
 print(df.describe())
@@ -53,15 +53,51 @@ import matplotlib.pyplot as plt;
 # - AVG MEMBERS per TYPE 
 # - favorites/member?
 
+
+def test_boxplot(frame:pd.DataFrame, column:str):
+	if not (column in frame.columns):
+		raise KeyError('boxplot_by_type {} not found in frame.columns'.format(column))
+	figure,axes = plt.subplots()
+	
+	frame.boxplot(
+		column=[column], by='type',
+		ax=axes,
+		showfliers=False,
+		positions=range(1,len(frame['type'].unique())+1)
+	)
+	labels = [label.get_text() for label in axes.get_xticklabels()]
+	print(labels)
+	frame.boxplot(
+		column=[column],
+		ax=axes,
+		showfliers=False,
+		positions=[0]
+	)
+	labels.append('overall')
+	axes.set_xticklabels(labels)
+	axes.set_xlabel('Content Types')
+	axes.set_ylabel(column)
+	axes.set_title('{} by Content Type (TEST)'.format(column))
+	return figure,axes
+
+test = test_boxplot(df,'members')
+f,a = plt.subplots()
+df.boxplot(
+		column=['members'],
+		ax=a,
+		showfliers=False,
+		positions=[0]
+	)
+exit()
 fig_01,ax = plt.subplots()
 df.boxplot(column=['score'], by='type',ax=ax)
 fig_01.savefig('08 Anime Exploration/01 Score Distribution by Type.jpg')
 
-fig_02,ax = plt.subplots()
-type_counts = df['type'].value_counts()
-print(type_counts)
-type_counts.plot.bar(ax=ax)
-fig_02.savefig('08 Anime Exploration/02 Entries by Type.jpg')
+# fig_02,ax = plt.subplots()
+# type_counts = df['type'].value_counts()
+# print(type_counts)
+# type_counts.plot.bar(ax=ax)
+# fig_02.savefig('08 Anime Exploration/02 Entries by Type.jpg')
 
 fig_03,ax = plt.subplots()
 df.boxplot(column=['members'], by='type',ax=ax, showfliers=False,showmeans=True)

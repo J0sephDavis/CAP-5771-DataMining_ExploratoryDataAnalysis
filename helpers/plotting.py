@@ -10,14 +10,14 @@ DEFAULT_FIGURE_SIZE=(10,10)
 DEFAULT_FIGURE_DPI=5000
 ROWS_TO_READ:Optional[int] = None
 
-def plot_joint_grid(dataset:pd.DataFrame, x_col:str,y_col:str, hue_column:str):
+def joint_grid(dataset:pd.DataFrame, x:str,y:str, hue:str):
 	''' Plots a KDE joint grid plot between x & y.
 	- On the x and y axes, the KDE is done for each value.
 	- The center of the graph is a the 2d KDE plot.
 	'''
-	jg = sns.JointGrid(data=dataset,x=x_col,y=y_col)
+	jg = sns.JointGrid(data=dataset,x=x,y=y)
 	jg.plot_joint(sns.kdeplot,bw_adjust=1,cut=1)
-	jg.plot_marginals(sns.kdeplot, data=dataset, hue=hue_column, legend=True, bw_adjust=0.7,cut=2)
+	jg.plot_marginals(sns.kdeplot, data=dataset, hue=hue, legend=True, bw_adjust=0.7,cut=2)
 	legend = jg.ax_marg_x.get_legend()
 	leg_y = jg.ax_marg_y.get_legend()
 	if leg_y is not None:
@@ -27,8 +27,8 @@ def plot_joint_grid(dataset:pd.DataFrame, x_col:str,y_col:str, hue_column:str):
 		if handles is not None:
 			legend.remove()
 			jg.ax_joint.legend(handles,labels, loc='upper right', frameon=True)
-	jg.set_axis_labels(xlabel=x_col,ylabel=y_col)
-	jg.figure.suptitle(t='{} by {} KDE'.format(x_col,y_col), y=0.995)
+	jg.set_axis_labels(xlabel=x,ylabel=y)
+	jg.figure.suptitle(t='{} by {} KDE'.format(x,y), y=0.995)
 	jg.figure.subplots_adjust(top=0.98, left=0.16)
 	jg.figure.set_size_inches(DEFAULT_FIGURE_SIZE)
 	jg.figure.set_dpi(DEFAULT_FIGURE_DPI)

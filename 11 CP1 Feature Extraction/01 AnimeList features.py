@@ -4,6 +4,7 @@ from typing import Tuple,List,Dict
 import matplotlib.ticker as ticker
 import numpy as np
 from pandas.plotting import scatter_matrix;
+from sklearn.manifold import TSNE
 
 import os
 from dotenv import load_dotenv, find_dotenv;
@@ -21,7 +22,6 @@ print(data_user_info)
 
 data_anime_info:str = os.getenv('MAL_ANIME_LIST','')
 print(data_anime_info)
-
 
 figures_filter_results = '10 CP1 Data Cleaning/filter_results'
 figures_clean_results = '10 CP1 Data Cleaning/clean_results'
@@ -41,35 +41,7 @@ import seaborn as sns
 # fig,ax = plt.subplots(dpi=DEFAULT_FIGURE_DPI)
 # scatter_matrix(dataset[['score','members','favorites']],ax=ax,figsize=DEFAULT_FIGURE_SIZE)
 
-# dataset['members_per_fav'] = dataset['members'] / dataset['favorites']
 dataset['fav_per_members'] = dataset['favorites'] / (dataset['members']/100)
-
-# subsets:Dict = {
-# 	'TV':		dataset.loc[dataset['type']=='TV', attributes],
-# 	'Movie':	dataset.loc[dataset['type']=='Movie', attributes],
-# 	'Special': 	dataset.loc[dataset['type']=='Special', attributes],
-# 	'OVA':		dataset.loc[dataset['type']=='OVA', attributes],
-# 	'ONA': 		dataset.loc[dataset['type']=='ONA', attributes],
-# }
-
-# just_tv = dataset.loc[(dataset['type']=='TV')]
-# no_tv = dataset.loc[dataset['type']!='TV']
-
-# For each type (possibly overlayed?!) plot:
-# - SCORE by MEMBERS
-# f1,ax1 = plt.subplots()
-# score_scatter_nt = sns.scatterplot(data=no_tv, y='members', x='score', hue='type', style='type', ax=ax1).set(title='Score by Members (no tv)')
-# f2,ax2 = plt.subplots()
-# score_kde_nt = sns.kdeplot(data=no_tv, y='members', x='score', hue='type',ax=ax2).set(title='Score by Members (no tv)')
-
-# f3,ax3 = plt.subplots()
-# score_scatter_jt = sns.scatterplot(data=just_tv, y='members', x='score', hue='type', style='type', ax=ax3).set(title='Score by Members (just tv)')
-# f4,ax4 = plt.subplots()
-# score_kde_jt = sns.kdeplot(data=just_tv, y='members', x='score', hue='type',ax=ax4).set(title='Score by Members (just tv)')
-
-# for a in attributes:
-# 	f,ax = plt.subplots()
-# 	kde = sns.kdeplot(data=dataset, x=a, hue='type',ax=ax).set(title='Kde of {}'.format(a))
 
 def plot_joint_grid(x_col:str,y_col:str):
 	jg = sns.JointGrid(data=dataset,x=x_col,y=y_col)
@@ -120,59 +92,104 @@ def create_figure_six():
 # f5.savefig('Figure 5 - Score by Favorites per Hundred Members.tiff')
 
 # f6 = create_figure_six()
-print(dataset.corr(numeric_only=True))
-from sklearn.decomposition import PCA
-pca = PCA(n_components=1)
-pca.fit(dataset[['favorites','members']])
-print(pca.get_covariance())
-print(pca.get_params())
-exit()
-graph_args:List[Tuple[str,str|None,bool,str|None]] = [
-	# ('fav_per_members', None, False, 'fav_per_members'), 
-	# ('members_per_fav', None, False, 'members_per_fav'), 
-	# ('fav_per_members', 'score', False, 'fav_per_members x score'), 
-	# ('members_per_fav', 'score', False, 'members_per_fav x score'), 
-	
-	# Compare
-	('score', None, False, 'Score'), 
-	('score', None, True, 'Score by Type'),
-	# # ------------
-	
-	# # Mention
-	('members', None, True, 'Members by Type'),
-	('favorites', None, False, 'Favorites'),
-	# # ------------
+# print(dataset.corr(numeric_only=True))
+# from sklearn.decomposition import PCA
+# pca = PCA(n_components=1)
+# pca.fit(dataset[['favorites','members']])
+# print(pca.get_covariance())
+# print(pca.get_params())
 
-	# # Compare
-	# ('score', 'favorites', True, 'Score, Favorites by Type'),
-	# ('score', 'favorites', False, 'Score by Favorites'),
-	# ------------
-	
-	# Compare
-	# ('score', 'members', False, 'Score by Members'), # Figure 4 done with joint grid
-	# ('score', 'members', True, 'Score, Members by Type'), # Bad.
-	# ------------
-	# ('members', 'favorites', False), # Bad.
-	# ('members', None, False), # Bad.
-	# ('favorites', None, True), # Bad.
-	# ('members', 'favorites', True), # Bad.
-]
-for args in graph_args:
-	f,ax = plt.subplots()
-	kde = sns.kdeplot(data=dataset,
-		x=args[0], y=args[1],
-		hue='type' if args[2] else None,
-		ax=ax
-	)
-	if (args[0] == 'score'): kde.set_xlim(0,10)
-	if (args[1] == 'score'): kde.set_ylim(0,10)
-	if args[3] is not None: kde.set(title=args[3])
-# - SCORE by FAVORITES
-# - MEMBERS BY FAVORITES
 
-exit()
-for label, data in subsets.items():
-	snsp = sns.pairplot(data, corner=True)
-	snsp.figure.suptitle('{}'.format(label))
+def graph_set_two():
+	graph_args:List[Tuple[str,str|None,bool,str|None]] = [
+		# ('fav_per_members', None, False, 'fav_per_members'), 
+		# ('members_per_fav', None, False, 'members_per_fav'), 
+		# ('fav_per_members', 'score', False, 'fav_per_members x score'), 
+		# ('members_per_fav', 'score', False, 'members_per_fav x score'), 
+		
+		# Compare
+		('score', None, False, 'Score'), 
+		('score', None, True, 'Score by Type'),
+		# # ------------
+		
+		# # Mention
+		('members', None, True, 'Members by Type'),
+		('favorites', None, False, 'Favorites'),
+		# # ------------
+
+		# # Compare
+		# ('score', 'favorites', True, 'Score, Favorites by Type'),
+		# ('score', 'favorites', False, 'Score by Favorites'),
+		# ------------
+		
+		# Compare
+		# ('score', 'members', False, 'Score by Members'), # Figure 4 done with joint grid
+		# ('score', 'members', True, 'Score, Members by Type'), # Bad.
+		# ------------
+		# ('members', 'favorites', False), # Bad.
+		# ('members', None, False), # Bad.
+		# ('favorites', None, True), # Bad.
+		# ('members', 'favorites', True), # Bad.
+	]
+	for args in graph_args:
+		f,ax = plt.subplots()
+		kde = sns.kdeplot(data=dataset,
+			x=args[0], y=args[1],
+			hue='type' if args[2] else None,
+			ax=ax
+		)
+		if (args[0] == 'score'): kde.set_xlim(0,10)
+		if (args[1] == 'score'): kde.set_ylim(0,10)
+		if args[3] is not None: kde.set(title=args[3])
+	# - SCORE by FAVORITES
+	# - MEMBERS BY FAVORITES
+
+	for label, data in subsets.items():
+		snsp = sns.pairplot(data, corner=True)
+		snsp.figure.suptitle('{}'.format(label))
 # sns.pairplot(dataset[['score','members','favorites','type']], hue="type")
+
+import time
+
+tsne_df = dataset.copy()[['anime_id','genre','type']]
+genre_cols = tsne_df['genre'].str.get_dummies(sep=',')
+tsne_df.drop(columns=['genre'],inplace=True)
+tsne_df = tsne_df.join(genre_cols)
+nrows = tsne_df.shape[1]
+data = tsne_df.drop(columns=['anime_id','type']).apply(pd.Series.value_counts)
+data = data.transpose()
+tsne_df.drop(columns=data.loc[(data[1]<nrows*0.05)].index, inplace=True)
+
+def perform_tsne(perp=48, max_iter=5000, no_prog_iter=500):
+	time_started = time.time()
+	tsne_one:str = 'tsne-2d-{}-{}-x'.format(perp, max_iter)
+	tsne_two:str = 'tsne-2d-{}-{}-y'.format(perp, max_iter)
+	tsne = TSNE(perplexity=perp, max_iter=max_iter, n_iter_without_progress=no_prog_iter)
+	tsne_res = tsne.fit_transform(tsne_df.drop(columns=['anime_id','type']))
+	tsne_df[tsne_one] = tsne_res[:,0]
+	tsne_df[tsne_two] = tsne_res[:,1]
+	print('tsne P:{} completed in {} sec'.format(perp, time.time()-time_started))
+	f,ax = plt.subplots()
+	sns.scatterplot(ax=ax,
+		x=tsne_one, y=tsne_two,
+		hue=tsne_two, style='type',
+		data=tsne_df, legend='auto',alpha=0.7,
+		palette=sns.color_palette("mako", as_cmap=True)
+	)
+	f.set_size_inches(10,10)
+	f.set_dpi(500)
+	f.savefig('TSNE OF GENRES-5 p:{} i:{}.tiff'.format(perp, max_iter))
+	print('saved as: TSNE OF GENRES p:{} i:{}.tiff'.format(perp,max_iter))
+
+for i in [32,48,62]:
+	perform_tsne(i, 2000)
+tsne_df.to_csv('TSNE_DATA_trim_05.csv', index=False)
+
+# genre_occurences = tsne_df.drop(columns=['anime_id','type'])
+# genre_occurences = genre_occurences.transpose().dot(genre_occurences)
+# genre_occurences.to_csv('occurences.csv')
+
+correlation = tsne_df.drop(columns=['anime_id','type']).corr()
+correlation.to_csv('genre_correlation.csv')
+
 exit()

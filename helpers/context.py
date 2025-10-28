@@ -18,31 +18,6 @@ class EnvRequiredFields(StrEnum):
 
 _env_known_fields:List[str] = [x.value for x in EnvRequiredFields]
 
-def _load_find_env(
-			dotenv_path:str=_default_dotenv_path, override_env:bool=True,
-			use_cwd:bool=True, raise_error_if_not_found:bool=True
-		)->Tuple[bool,str]:
-	""" Loads the dotenv & returns load_dotenv(), find_dotenv()"""
-	try:
-		path:str = find_dotenv(
-			filename=dotenv_path, usecwd=use_cwd,
-			raise_error_if_not_found=raise_error_if_not_found
-		)
-	except OSError as e:
-		print( # Begin formatted block, do not indent.
-f"""
-{str(e.__class__)}{'-'*(80-len(str(e.__class__)))}
-{e}
-	find_dotenv could not find the requested dotenv.
-	dotenv_path:{dotenv_path}
-	use_cwd:{use_cwd}.
-Please check the filename.
-{'-'*80}"""
-		) # End formatted block.
-		raise e # Raise again to stop execution & print traceback
-	return load_dotenv(dotenv_path=path, override=override_env), path
-
-
 def _get_len_safe(val)->int:
 	""" Get val repr then measure len"""
 	val=str(val)
@@ -87,7 +62,32 @@ def pretty_print_key_val(env_vals:Dict, remove_prefix:Optional[str]=os.getcwd())
 		)
 	print(separator)
 
+def load_find_env(
+			dotenv_path:str=_default_dotenv_path, override_env:bool=True,
+			use_cwd:bool=True, raise_error_if_not_found:bool=True,
+			pretty_print_remove_suffix:Optional[str] = os.getcwd()
+		)->Tuple[bool,str]:
+	""" Loads the dotenv & returns load_dotenv(), find_dotenv()"""
+	try:
+		path:str = find_dotenv(
+			filename=dotenv_path, usecwd=use_cwd,
+			raise_error_if_not_found=raise_error_if_not_found
+		)
+	except OSError as e:
+		print( # Begin formatted block, do not indent.
+f"""
+{str(e.__class__)}{'-'*(80-len(str(e.__class__)))}
+{e}
+	find_dotenv could not find the requested dotenv.
+	dotenv_path:{dotenv_path}
+	use_cwd:{use_cwd}.
+Please check the filename.
+{'-'*80}"""
+		) # End formatted block.
+		raise e # Raise again to stop execution & print traceback
+	success = load_dotenv(dotenv_path=path, override=override_env)
+	pretty_print_key_val(dotenv_values(path), f'{os.getcwd()}')
+	return success, path
+
 if __name__ == '__main__':
-	loaded,path = _load_find_env()
-	print(loaded)
-	pretty_print_key_val(dotenv_values(path),f'{os.getcwd()}')
+	loaded,path = load_find_env(pretty_print_remove_suffix=os.getcwd())

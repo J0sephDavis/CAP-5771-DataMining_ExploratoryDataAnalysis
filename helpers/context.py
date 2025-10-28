@@ -14,7 +14,14 @@ class EnvRequiredFields(StrEnum):
 	USER_LIST='MAL_USER_LIST'
 	RANKING_LIST='MAL_RANKING_LIST'
 	ANIME_LIST='MAL_ANIME_LIST'
-	IMAGE_OUTPUT_FOLDER='IMAGE_OUTPUT_FOLDER'
+	
+	CF_FOLDER='CF_FOLDER' # Cleaned and Filtered root folder
+	CF_FOLDER_COMPARE='CF_FOLDER_COMPARE' # Cleaned and Filtered root folder
+	CF_FOLDER_CLEANED='CF_FOLDER_CLEANED' # Where The cleaned data & figures can be found
+	CF_FOLDER_FILITED='CF_FOLDER_FILTERED'
+	
+	ANIME_FILTERED='ANIME_FILTERED' # Where the filtered anime dataset can be found
+	ANIME_CLEANED='ANIME_CLEANED' # Where the cleaned dataset can be found
 
 _env_known_fields:List[str] = [x.value for x in EnvRequiredFields]
 
@@ -88,6 +95,13 @@ Please check the filename.
 	success = load_dotenv(dotenv_path=path, override=override_env)
 	pretty_print_key_val(dotenv_values(path), f'{os.getcwd()}')
 	return success, path
+
+def get_env_val_safe(key:str)->str:
+	''' Get an env value safely, if the value is None, raise KeyError '''
+	val = os.getenv(key,None)
+	if val is None:
+		raise KeyError(f'Could not get env value with  key: {key}')
+	return val
 
 if __name__ == '__main__':
 	loaded,path = load_find_env(pretty_print_remove_suffix=os.getcwd())

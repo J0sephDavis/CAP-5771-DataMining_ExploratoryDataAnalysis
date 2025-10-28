@@ -8,7 +8,7 @@ import seaborn as sns
 import time
 
 DEFAULT_FIGURE_SIZE=(10,10)
-DEFAULT_FIGURE_DPI=5000
+DEFAULT_FIGURE_DPI=500
 ROWS_TO_READ:Optional[int] = None
 
 def joint_grid(dataset:pd.DataFrame, x:str,y:str, hue:str):

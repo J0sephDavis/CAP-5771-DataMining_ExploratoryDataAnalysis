@@ -55,20 +55,27 @@ def perform_tsne(
 		tsne_x_column, tsne_y_column
 	)
 
-def plot_tsne(
-		tsne_data:pd.DataFrame, x_column:str, y_column:str, file_name:str,
-		hue_column:Optional[str]=None, style_column:Optional[str] = None,
+def scatter(
+		data:pd.DataFrame, x:str, y:str, file_name:str,
+		hue:Optional[str]=None, style:Optional[str] = None,
 		figure_size:Tuple[int,int]=DEFAULT_FIGURE_SIZE, figure_dpi:int=DEFAULT_FIGURE_DPI
 	):
-	''' Plots the TSNE data as a scatter plot. '''
+	''' Plots scatterplot and returns None or figures,axes'''
+	should_cont, already_exists = should_continue_with_file(
+		filename=file_name, clobber=True, raise_exception=True
+	)
+	if not should_cont:
+		print(f'TSNE not plotted {file_name} already exists.')
+		return None
 	f,ax = plt.subplots()
-	sns.scatterplot(ax=ax,
-		x=x_column, y=y_column,
-		hue=hue_column, style=style_column,
-		data=tsne_data, legend='auto',alpha=0.7,
+	scatter = sns.scatterplot(ax=ax,
+		x=x, y=y,
+		hue=hue, style=style,
+		data=data, legend='auto',alpha=0.7,
 		palette=sns.color_palette("mako", as_cmap=True)
 	)
 	f.set_size_inches(figure_size)
 	f.set_dpi(figure_dpi)
 	f.savefig(file_name)
 	print(f'PLOT_TSNE, Saved figure: {file_name}')
+	return (f,ax)

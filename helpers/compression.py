@@ -1,8 +1,8 @@
 import tarfile
 import os
-import datetime
 from pathlib import Path
 from typing import List
+from .context import todays_date_iso8601
 def save_files_to_tar(name_infix:str, name_prefix:str, working_directory:str, globs:List[str], delete_source_files:bool=False, clobber:bool=False):
 	''' Adds all files from glob to a tar file, with the {name} value appended to the ISO8601 date, and saved in the save_to_path folder.
 	name_infix:str - comes after the ISO datetime, but before the file extension. {date} - {name_infix}.tar.lzma
@@ -12,7 +12,7 @@ def save_files_to_tar(name_infix:str, name_prefix:str, working_directory:str, gl
 	delete_source_file:bool - After adding a file to the tarball, delete it.
 	clobber:bool - if a tarfile already exists, delete it and write over it.
 	'''
-	file_path:Path = Path(f'{name_prefix}{datetime.datetime.now().strftime(r'%Y-%m-%d')} - {name_infix}.tar.lzma')
+	file_path:Path = Path(f'{name_prefix}{todays_date_iso8601()} - {name_infix}.tar.lzma')
 	print(f'TAR FILE: {file_path}')
 	if file_path.exists():
 		if clobber:

@@ -37,8 +37,7 @@ def save_files_to_tar(name_infix:str, working_directory:str, globs:List[str], de
 		file.unlink()
 
 if __name__ == '__main__':
-	name='TSNE OF GENRES - Checkpoint 1'
-	sp=os.getcwd()
+	name='Checkpoint 1 - TSNE Cluster I presume'
 	lp=os.getcwd()
-	globs=['*TSNE*.csv', '*TSNE*.tiff']
+	globs=['*cluster*.csv']
 	save_files_to_tar(name,lp,globs,delete_source_files=True, clobber=False)

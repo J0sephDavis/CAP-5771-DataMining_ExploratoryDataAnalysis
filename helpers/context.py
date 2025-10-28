@@ -1,7 +1,11 @@
 from dotenv import load_dotenv, find_dotenv, dotenv_values
 from typing import Tuple, Dict, List, Optional, Any, Callable
 from enum import StrEnum
+import datetime
 import os
+
+def todays_date_iso8601()->str:
+	return datetime.datetime.now().strftime(r'%Y-%m-%d')
 
 _default_dotenv_path:str = 'data.env'
 _unknown_field_prefix = '?!: '

@@ -4,12 +4,14 @@ from enum import StrEnum
 import os
 
 _default_dotenv_path:str = 'data.env'
-_unknown_field_prefix = '! UNKNOWN: '
+_unknown_field_prefix = '?!: '
+
 class EnvRequiredFields(StrEnum):
 	USER_LIST='MAL_USER_LIST'
 	RANKING_LIST='MAL_RANKING_LIST'
 	ANIME_LIST='MAL_ANIME_LIST'
 	IMAGE_OUTPUT_FOLDER='IMAGE_OUTPUT_FOLDER'
+
 _env_known_fields:List[str] = [x.value for x in EnvRequiredFields]
 
 def _load_find_env(
@@ -53,8 +55,6 @@ def _get_max_lengths(env_vals:Dict, preprocess_value:Callable[[Any],Any])->Tuple
 		)
 		max_value_len = max(max_value_len, _get_len_safe(v)+1)
 	return max_key_len, max_value_len
-
-
 
 def pretty_print_key_val(env_vals:Dict, remove_prefix:Optional[str]=os.getcwd()):
 	""" Pretty print a dictionary by key,val. Removes cwd from all values. """

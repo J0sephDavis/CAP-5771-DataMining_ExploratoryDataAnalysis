@@ -105,4 +105,6 @@ def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 		dataset_with_tsne = multiple_tsne_plots(clean_data)
 		dataset_with_tsne.to_csv(f'{data_CLEAN}{os.sep}{todays_date_iso8601()} Genre TSNE.csv', index=False)
 	return
-plot_results(True,True)
+
+if __name__ == '__main__':
+	plot_results(True,True)

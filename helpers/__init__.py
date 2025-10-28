@@ -1,4 +1,5 @@
 __all__ = [
 	'context',
-	'compression'
+	'compression',
+	'plotting'
 ]

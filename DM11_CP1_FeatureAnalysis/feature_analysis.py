@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 dotenv_found, dotenv_path = context.load_find_env()
-clean_folder:Path = Path(f'13 CP1 - Feature Analysis')
+clean_folder:Path = Path(f'DM11_CP1_FeatureAnalysis{os.sep}Results')
 
 # TSNE
 def create_genres_frame(dataset:pd.DataFrame)->pd.DataFrame:
@@ -80,7 +80,7 @@ def figure_mem_fav(dataset:pd.DataFrame, filename:str, clobber:bool=False):
 
 def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 	clean_data = pd.read_csv(
-		'10 CP1 Data Cleaning/AnimeList_filtered_cleaned.csv'
+		context.get_env_val_safe(context.EnvRequiredFields.ANIME_CLEANED)
 	)
 	clean_data['fav_per_members'] = clean_data['favorites'] / (clean_data['members']/100)
 	print(clean_data.info())

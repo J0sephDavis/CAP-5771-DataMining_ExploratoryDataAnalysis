@@ -50,6 +50,7 @@ def fig_score_mem(dataset:pd.DataFrame, filename:str, clobber:bool=False):
 	low,high=jg.ax_joint.get_ylim()
 	jg.ax_joint.set_ylim(low*0.1,high*0.24)
 	jg.ax_joint.set_xlim(0,10)
+	jg.savefig(filename)
 	return jg
 
 def figure_kde_score_fpm(dataset:pd.DataFrame, filename:str, clobber:bool=False):
@@ -62,6 +63,7 @@ def figure_kde_score_fpm(dataset:pd.DataFrame, filename:str, clobber:bool=False)
 	jg.ax_joint.set_ylim(low*0.15,high*0.24)
 	jg.ax_joint.set_xlim(0,10)
 	jg.figure.suptitle('Score, Favorites per Hundred Members')
+	jg.savefig(filename)
 	return jg
 
 def figure_mem_fav(dataset:pd.DataFrame, filename:str, clobber:bool=False):

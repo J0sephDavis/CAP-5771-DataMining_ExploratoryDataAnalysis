@@ -3,9 +3,16 @@ import os
 import datetime
 from pathlib import Path
 from typing import List
-def save_files_to_tar(name_infix:str, working_directory:str, globs:List[str], delete_source_files:bool=False, clobber:bool=False):
-	''' Adds all files from glob to a tar file, with the {name} value appended to the ISO8601 date, and saved in the save_to_path folder.'''
-	file_path:Path = Path(f'{datetime.datetime.now().strftime(r'%Y-%m-%d')} - {name_infix}.tar.lzma')
+def save_files_to_tar(name_infix:str, name_prefix:str, working_directory:str, globs:List[str], delete_source_files:bool=False, clobber:bool=False):
+	''' Adds all files from glob to a tar file, with the {name} value appended to the ISO8601 date, and saved in the save_to_path folder.
+	name_infix:str - comes after the ISO datetime, but before the file extension. {date} - {name_infix}.tar.lzma
+	name_prefix:str - comes before ISO datetime, use this to build relative paths. {name_prefix}{date}...
+	globs:List[str] - A list of glob patterns. refer to pathlib.Path documentation
+	working_directory:str - the path from which glob patterns are explored.
+	delete_source_file:bool - After adding a file to the tarball, delete it.
+	clobber:bool - if a tarfile already exists, delete it and write over it.
+	'''
+	file_path:Path = Path(f'{name_prefix}{datetime.datetime.now().strftime(r'%Y-%m-%d')} - {name_infix}.tar.lzma')
 	print(f'TAR FILE: {file_path}')
 	if file_path.exists():
 		if clobber:
@@ -37,7 +44,12 @@ def save_files_to_tar(name_infix:str, working_directory:str, globs:List[str], de
 		file.unlink()
 
 if __name__ == '__main__':
-	name='Checkpoint 1 - TSNE Cluster I presume'
-	lp=os.getcwd()
-	globs=['*cluster*.csv']
-	save_files_to_tar(name,lp,globs,delete_source_files=True, clobber=False)
+	name='Anime Exploration'
+	globs=['*.csv', '*.jpg']
+	directory = f'{os.getcwd()}{os.sep}08 Anime Exploration/'
+	save_files_to_tar(
+		name_infix = name, name_prefix = directory,
+		working_directory = directory,
+		globs = globs,
+		delete_source_files=True, clobber=False
+	)

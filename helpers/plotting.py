@@ -35,15 +35,14 @@ def plot_joint_grid(dataset:pd.DataFrame, x_col:str,y_col:str, hue_column:str):
 	return jg
 
 def perform_tsne(
-		tsne_data:pd.DataFrame, file_name_prefix:str,
-		perplexity:int,max_iter:int, no_progress_iter:int,
+		tsne_data:pd.DataFrame,
+		perplexity:int=48,max_iter:int=5000, no_progress_iter:int=500,
 	)->Tuple[pd.DataFrame, str,str]:
 	''' Performs TSNE & returns the results.
 	tsne_data: should be a copy of the data, containing all columns you want to process
 	Returns the tsne_results, the name of the x column, the name of the y column.
 	'''
 	time_started = time.time()
-	filename:str = f'{file_name_prefix} p:{perplexity} i:{max_iter}.tiff'
 	tsne_x_column:str = f'TSNE-X perp:{perplexity} max:{max_iter}'
 	tsne_y_column:str = f'TSNE-Y perp:{perplexity} max:{max_iter}'
 
@@ -51,7 +50,7 @@ def perform_tsne(
 	tsne_res = tsne.fit_transform(tsne_data)
 	print('tsne P:{} completed in {} sec'.format(perplexity, time.time()-time_started))
 	
-	return (pd.DataFrame((tsne_res[:,1],tsne_res[:,1]), columns=[tsne_x_column, tsne_y_column]),
+	return (pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column]),
 		tsne_x_column, tsne_y_column
 	)
 

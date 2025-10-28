@@ -3,7 +3,7 @@ import os
 import datetime
 from pathlib import Path
 from typing import List
-def save_files_to_tar(name_infix:str, working_directory:str, glob:str, delete_source_files:bool=False, clobber:bool=False):
+def save_files_to_tar(name_infix:str, working_directory:str, globs:List[str], delete_source_files:bool=False, clobber:bool=False):
 	''' Adds all files from glob to a tar file, with the {name} value appended to the ISO8601 date, and saved in the save_to_path folder.'''
 	file_path:Path = Path(f'{datetime.datetime.now().strftime(r'%Y-%m-%d')} - {name_infix}.tar.lzma')
 	print(f'TAR FILE: {file_path}')
@@ -19,13 +19,16 @@ def save_files_to_tar(name_infix:str, working_directory:str, glob:str, delete_so
 	files:List[Path] = []
 	with tarfile.open(name=file_path, mode='w:xz') as tar:
 		load_path = Path(working_directory)
-		for p in load_path.glob(glob):
-			file = Path(p)
-			if not file.is_file():
-				continue
-			print(f'Adding file: {file}')
-			tar.add(file,arcname=file.name)
-			files.append(file)
+		for glob in globs:
+			for p in load_path.glob(glob):
+				file = Path(p)
+				if not file.is_file():
+					continue
+				if file in files:
+					continue
+				print(f'Adding file: {file}')
+				tar.add(file,arcname=file.name)
+				files.append(file)
 	
 	if not delete_source_files:
 		return
@@ -34,8 +37,8 @@ def save_files_to_tar(name_infix:str, working_directory:str, glob:str, delete_so
 		file.unlink()
 
 if __name__ == '__main__':
-	name='test'
+	name='TSNE OF GENRES - Checkpoint 1'
 	sp=os.getcwd()
 	lp=os.getcwd()
-	glob='*.tiff'
-	save_files_to_tar(name,lp,glob,delete_source_files=False, clobber=False)
+	globs=['*TSNE*.csv', '*TSNE*.tiff']
+	save_files_to_tar(name,lp,globs,delete_source_files=True, clobber=False)

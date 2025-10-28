@@ -2,9 +2,8 @@ from helpers.context import todays_date_iso8601
 from helpers import plotting, context, files
 import pandas as pd
 import os
-from sklearn.decomposition import PCA
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 dotenv_found, dotenv_path = context.load_find_env()
 clean_folder:Path = Path(f'13 CP1 - Feature Analysis')
@@ -21,7 +20,7 @@ def create_genres_frame(dataset:pd.DataFrame)->pd.DataFrame:
 	tsne_df.drop(columns=genre_counts.loc[(genre_counts[1]<nrows*0.05)].index, inplace=True)
 	return tsne_df
 
-def multiple_tsne_plots(dataset:pd.DataFrame, perplexities:List[int] = [32,48,64])->pd.DataFrame:
+def multiple_tsne_plots(dataset:pd.DataFrame, folder:Optional[Path] = None, perplexities:List[int] = [32,48,64])->pd.DataFrame:
 	''' Performs TSNE on perplexities and returns dataset.'''
 	tsne_dataframe = create_genres_frame(dataset.copy())
 	for p in perplexities:
@@ -31,6 +30,8 @@ def multiple_tsne_plots(dataset:pd.DataFrame, perplexities:List[int] = [32,48,64
 			perplexity=p, max_iter=max_iter
 		)
 		filename:str = f'TSNE perplexity:{p} max_iterations:{max_iter}.tiff'
+		if folder is not None:
+			filename = f'{folder}{os.sep}{filename}'
 		dataset = dataset.merge(tsne_data, left_index=True, right_index=True)
 		plotting.scatter(
 			data=dataset, file_name=filename,
@@ -84,9 +85,9 @@ def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 	clean_data['fav_per_members'] = clean_data['favorites'] / (clean_data['members']/100)
 	print(clean_data.info())
 	print(clean_data.describe())
+	figures_CLEAN = Path(f'{clean_folder}/figures')
+	figures_CLEAN.mkdir(mode=0o755,parents=True,exist_ok=True)
 	if generate_kde_graphs:
-		figures_CLEAN = Path(f'{clean_folder}/figures')
-		figures_CLEAN.mkdir(mode=0o755,parents=True,exist_ok=True)
 		f4 = fig_score_mem(
 			dataset=clean_data,
 			filename=f'{figures_CLEAN}{os.sep}Figure 4 - KDE Score by Members.tiff'
@@ -102,7 +103,7 @@ def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 	if generate_TSNE:
 		data_CLEAN = Path(f'{clean_folder}/data')
 		data_CLEAN.mkdir(mode=0o755,parents=True,exist_ok=True)
-		dataset_with_tsne = multiple_tsne_plots(clean_data)
+		dataset_with_tsne = multiple_tsne_plots(clean_data, folder=figures_CLEAN)
 		dataset_with_tsne.to_csv(f'{data_CLEAN}{os.sep}{todays_date_iso8601()} Genre TSNE.csv', index=False)
 	return
 

@@ -9,8 +9,8 @@ from sklearn.decomposition import PCA
 import seaborn as sns
 import time
 
-DEFAULT_FIGURE_SIZE=(5,5)
-DEFAULT_FIGURE_DPI=300
+DEFAULT_FIGURE_SIZE=(10,10)
+DEFAULT_FIGURE_DPI=5000
 ROWS_TO_READ:Optional[int] = None
 
 def plot_joint_grid(dataset:pd.DataFrame, x_col:str,y_col:str, hue_column:str):
@@ -33,6 +33,8 @@ def plot_joint_grid(dataset:pd.DataFrame, x_col:str,y_col:str, hue_column:str):
 	jg.set_axis_labels(xlabel=x_col,ylabel=y_col)
 	jg.figure.suptitle(t='{} by {} KDE'.format(x_col,y_col), y=0.995)
 	jg.figure.subplots_adjust(top=0.98, left=0.16)
+	jg.figure.set_size_inches(DEFAULT_FIGURE_SIZE)
+	jg.figure.set_dpi(DEFAULT_FIGURE_DPI)
 	return jg
 
 def perform_tsne(

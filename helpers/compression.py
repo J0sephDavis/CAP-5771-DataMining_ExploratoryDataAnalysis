@@ -38,4 +38,4 @@ if __name__ == '__main__':
 	sp=os.getcwd()
 	lp=os.getcwd()
 	glob='*.tiff'
-	save_files_to_tar(name,lp,glob,False)
+	save_files_to_tar(name,lp,glob,delete_source_files=False, clobber=False)

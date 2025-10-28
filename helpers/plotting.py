@@ -1,11 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Tuple,List,Dict,Optional
-import matplotlib.ticker as ticker
-import numpy as np
+from typing import Tuple,Optional
 from pandas.plotting import scatter_matrix;
 from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
 import seaborn as sns
 import time
 

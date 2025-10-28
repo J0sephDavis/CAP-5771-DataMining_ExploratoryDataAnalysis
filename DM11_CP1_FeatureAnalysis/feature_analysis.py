@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import List
 
 dotenv_found, dotenv_path = context.load_find_env()
-clean_folder:Path = Path(f'13 Checkpoint One Data{os.sep}Clean')
-filter_folder:Path = Path(f'13 Checkpoint One Data{os.sep}Filter')
+clean_folder:Path = Path(f'13 CP1 - Feature Analysis')
 
 # TSNE
 def create_genres_frame(dataset:pd.DataFrame)->pd.DataFrame:
@@ -86,7 +85,7 @@ def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 	print(clean_data.info())
 	print(clean_data.describe())
 	if generate_kde_graphs:
-		figures_CLEAN = Path(f'{clean_folder}/figures_CLEAN')
+		figures_CLEAN = Path(f'{clean_folder}/figures')
 		figures_CLEAN.mkdir(mode=0o755,parents=True,exist_ok=True)
 		f4 = fig_score_mem(
 			dataset=clean_data,
@@ -101,7 +100,7 @@ def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 			filename=f'{figures_CLEAN}{os.sep}Figure 6 - KDE Members by Favorites.tiff'
 		)
 	if generate_TSNE:
-		data_CLEAN = Path(f'{clean_folder}/data_CLEAN')
+		data_CLEAN = Path(f'{clean_folder}/data')
 		data_CLEAN.mkdir(mode=0o755,parents=True,exist_ok=True)
 		dataset_with_tsne = multiple_tsne_plots(clean_data)
 		dataset_with_tsne.to_csv(f'{data_CLEAN}{os.sep}{todays_date_iso8601()} Genre TSNE.csv', index=False)

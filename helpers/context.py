@@ -4,6 +4,13 @@ from enum import StrEnum
 import datetime
 import os
 
+class EnvException(Exception):
+	pass
+class EnvExceptionKeyError(EnvException):
+	pass
+class EnvExceptionMissingValue(EnvException):
+	pass
+
 def todays_date_iso8601()->str:
 	return datetime.datetime.now().strftime(r'%Y-%m-%d')
 

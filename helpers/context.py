@@ -133,7 +133,7 @@ def get_env_val_safe(key:_Union[_StrEnum,str], default:_Optional[str]=None)->str
 	val = _os.getenv(key,default)
 		
 	if val is None:
-		raise EnvExceptionMissingValue(f'Could not get env value with key: s{key}')
+		raise EnvExceptionMissingValue(f'Could not get env value with key: {key}')
 	return val
 
 if __name__ == '__main__':

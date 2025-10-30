@@ -40,3 +40,26 @@ def get_user_rankings(nrows:Optional[int], use_cols:Optional[List[UserRankingCol
 		usecols=use_cols
 	)
 raw_dataset_length:Final[int] = 80076112
+user_rankings = get_user_rankings(
+	nrows = int(raw_dataset_length*0.15), # load a fraction of the dataset
+	use_cols = None
+)
+''' NOTE
+ 	My computer likely cannot handle loading this entire dataset at once.
+	 	There are 80,076,112 records.
+	We are going to ignore the following columns due to sparsity:
+		- TAGS
+		- REWATCHING
+		- REWATCHING_EP
+	We might ignore the following due to sparsity and lack of usability/reliability:
+		- START_DATE
+		- FINISH_DATE
+		- LAST_UPDATED
+	We primarily care about:
+		- USERNAME
+		- ANIME_ID
+		- WATCHED_EPISODES
+		- SCORE
+		- STATUS
+'''
+exit()

@@ -54,4 +54,6 @@ def filter_dataset(anime_list:_pd.DataFrame)->_Tuple[_pd.DataFrame, _pd.DataFram
 	# 	index=frame[(frame[_AnimeListColumns.TYPE]=='Music')|(frame[_AnimeListColumns.TYPE]=='Unknown')].index,
 	# 	inplace=True
 	# )
+	frame.to_csv(_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED)), index=False)
+	removed_records.to_csv(_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED_OUT)), index=False)
 	return frame, removed_records

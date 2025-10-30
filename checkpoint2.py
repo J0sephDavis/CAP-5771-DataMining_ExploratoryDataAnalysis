@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from typing import Optional, List, Final
 from enum import StrEnum
-from DM14_CP2_UserRankings import (
+from RankingList import (
 	dataset,
 	filter,
 	clean,

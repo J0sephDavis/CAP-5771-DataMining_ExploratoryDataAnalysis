@@ -14,12 +14,19 @@ if not loaded:
 	exit()
 
 ''' TODO
-1. [ ] Fetch dataset
-2. [ ] Filter and Clean
-3. [ ] Boxplots for each feature
-4. [ ] Measure covariance of features
-5. [ ] Visualize covariant features
-6. [ ] UMAP, TSNE of data
+- [ ] Fetch dataset
+
+- [ ] Filter
+	- [ ] ANIME_ID must be in our filtered & cleaned ANIME dataset.
+	- [ ] 
+- [ ] Clean
+	- [ ] Remove invalid records
+	- [ ] Fix invalid values, if we need to.
+
+- [ ] Boxplots for each feature
+- [ ] Measure covariance of features
+- [ ] Visualize covariant features
+- [ ] UMAP, TSNE of data
 '''
 
 ''' NOTE

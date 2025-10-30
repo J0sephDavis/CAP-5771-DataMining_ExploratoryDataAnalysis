@@ -24,7 +24,7 @@ def generate_graphs(load_env:bool):
 	if load_env:
 		load_find_env()
 	anime_filtered = get_filtered_anime_dataset(None)
-	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.CF_FOLDER_CLEANED))
+	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.ANIME_CF_FOLDER_CLEANED))
 	CLEANED_FILE:Path = Path(get_env_val_safe(EnvFields.ANIME_CLEANED))
 	RESULTS_FOLDER.mkdir(mode=0o775, parents=True,exist_ok=True)
 	# Compare results after cleaning

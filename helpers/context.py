@@ -37,10 +37,10 @@ class EnvFields(_StrEnum):
 	RANKING_LIST='MAL_RANKING_LIST'
 	ANIME_LIST='MAL_ANIME_LIST'
 	
-	CF_FOLDER='CF_FOLDER' # Cleaned and Filtered root folder
-	CF_FOLDER_COMPARE='CF_FOLDER_COMPARE' # Cleaned and Filtered root folder
-	CF_FOLDER_CLEANED='CF_FOLDER_CLEANED' # Where The cleaned data & figures can be found
-	CF_FOLDER_FILITED='CF_FOLDER_FILTERED'
+	ANIME_CF_FOLDER='ANIME_CF_FOLDER' # Cleaned and Filtered root folder
+	ANIME_CF_FOLDER_COMPARE='ANIME_CF_FOLDER_COMPARE' # Cleaned and Filtered root folder
+	ANIME_CF_FOLDER_CLEANED='ANIME_CF_FOLDER_CLEANED' # Where The cleaned data & figures can be found
+	ANIME_CF_FOLDER_FILITED='ANIME_CF_FOLDER_FILTERED'
 	
 	ANIME_FILTERED='ANIME_FILTERED' # Where the filtered anime dataset can be found
 	ANIME_CLEANED='ANIME_CLEANED' # Where the cleaned dataset can be found

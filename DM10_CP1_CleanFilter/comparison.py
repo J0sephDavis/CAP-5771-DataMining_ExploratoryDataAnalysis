@@ -7,7 +7,7 @@ from pathlib import Path
 def generate_graphs(load_env:bool):
 	if load_env:
 		load_find_env()
-	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.CF_FOLDER_COMPARE))
+	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.ANIME_CF_FOLDER_COMPARE))
 	RESULTS_FOLDER.mkdir(mode=0o775, parents=True,exist_ok=True)
 
 	anime_raw = get_dataset()

@@ -32,6 +32,14 @@ class UserRankingColumn(_StrEnum):
 	LAST_UPDATED		='my_last_updated'
 	TAGS				='my_tags'				# Majority missing
 
+from enum import IntEnum as _IntEnum
+class StatusEnum(_IntEnum):
+	WATCHING=1
+	COMPLETED=2
+	ON_HOLD=3
+	DROPPED=4
+	PLAN_TO_WATCH=6
+
 raw_dataset_length:_Final[int] = 80076112
 columns_for_retrieval:_Final[_List[_Union[UserRankingColumn,str]]] = [
 	UserRankingColumn.ANIME_ID,

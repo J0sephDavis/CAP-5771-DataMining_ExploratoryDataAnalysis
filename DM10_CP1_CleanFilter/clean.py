@@ -30,8 +30,8 @@ def generate_graphs(load_env:bool):
 	except FileNotFoundError:
 		anime_cleaned, anime_cleaned_out = _clean.clean_dataset(anime_filtered)
 	
-	anime_filtered[_DatasetDescriptors .ColumnName]=_DatasetDescriptors .Filtered
-	anime_cleaned[_DatasetDescriptors .ColumnName]=_DatasetDescriptors .Cleaned	
+	anime_filtered[_DatasetDescriptors.ColumnName]=_DatasetDescriptors.Filtered
+	anime_cleaned[_DatasetDescriptors.ColumnName]=_DatasetDescriptors.Cleaned	
 	# # Comparison Frame
 	clean_comparison_frame = _pd.concat([
 		anime_cleaned,

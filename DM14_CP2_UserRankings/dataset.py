@@ -33,7 +33,7 @@ class UserRankingColumn(_StrEnum):
 	TAGS				='my_tags'				# Majority missing
 
 raw_dataset_length:_Final[int] = 80076112
-columns_for_retrieval:_Final[_List[UserRankingColumn]] = [
+columns_for_retrieval:_Final[_List[_Union[UserRankingColumn,str]]] = [
 	UserRankingColumn.ANIME_ID,
 	UserRankingColumn.USERNAME,
 	UserRankingColumn.WATCHED_EPISODES,

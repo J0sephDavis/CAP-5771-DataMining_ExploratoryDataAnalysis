@@ -3,7 +3,11 @@ from pathlib import Path
 import pandas as pd
 from typing import Optional, List, Final
 from enum import StrEnum
-import DM14_CP2_UserRankings.dataset as dataset
+from DM14_CP2_UserRankings import (
+	dataset,
+	filter,
+	clean,
+)
 loaded, _ = load_find_env()
 if not loaded:
 	print('DOTENV could not be loaded. STOP.')
@@ -36,8 +40,9 @@ if not loaded:
 		- SCORE
 		- STATUS
 '''
+SUBSET_NROWS:Final[int] = int(dataset.raw_dataset_length*0.15)
 user_rankings = dataset.get_user_rankings(
-	nrows = int(dataset.raw_dataset_length*0.15), # load a fraction of the dataset
+	nrows = SUBSET_NROWS, # load a fraction of the dataset
 	use_cols = dataset.columns_for_retrieval
 )
 exit()

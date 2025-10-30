@@ -44,6 +44,13 @@ class EnvFields(_StrEnum):
 	
 	ANIME_FILTERED='ANIME_FILTERED' # Where the filtered anime dataset can be found
 	ANIME_CLEANED='ANIME_CLEANED' # Where the cleaned dataset can be found
+	ANIME_CLEANED_OUT='ANIME_CLEANED_OUT' # The records removed during cleaning
+
+	RANKING_FOLDER='RANKING_FOLDER'
+	RANKING_FOLDER_FILTER='RANKING_FOLDER_FILTER'
+	RANKING_FOLDER_CLEAN='RANKING_FOLDER_CLEAN'
+	RANKING_FILTERED='RANKING_FILTERED'
+	RANKING_CLEANED='RANKING_CLEANED'
 
 _env_known_fields:_List[str] = [x.value for x in EnvFields]
 

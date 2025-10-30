@@ -47,4 +47,6 @@ def clean_dataset(anime_list:_pd.DataFrame)->_Tuple[_pd.DataFrame, _pd.DataFrame
 	REMOVE = (impossible_score | no_members | invalid_status | no_genre)
 	removed = frame.loc[REMOVE].copy()
 	frame.drop(index=removed.index,inplace=True)
+	frame.to_csv(_get_env_val_safe(_EnvFields.ANIME_CLEANED))
+	removed.to_csv(_get_env_val_safe(_EnvFields.ANIME_CLEANED_OUT))
 	return frame, removed

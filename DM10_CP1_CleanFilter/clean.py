@@ -29,8 +29,6 @@ def generate_graphs(load_env:bool):
 		anime_cleaned_out = _clean.get_out_dataset()
 	except FileNotFoundError:
 		anime_cleaned, anime_cleaned_out = _clean.clean_dataset(anime_filtered)
-		anime_cleaned.to_csv(_get_env_val_safe(_EnvFields.ANIME_CLEANED))
-		anime_cleaned_out.to_csv(_get_env_val_safe(_EnvFields.ANIME_CLEANED_OUT))
 	
 	anime_filtered[_DatasetDescriptors .ColumnName]=_DatasetDescriptors .Filtered
 	anime_cleaned[_DatasetDescriptors .ColumnName]=_DatasetDescriptors .Cleaned	

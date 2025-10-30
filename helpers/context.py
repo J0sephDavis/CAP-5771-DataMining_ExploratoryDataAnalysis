@@ -17,10 +17,13 @@ import datetime as _datetime
 import os as _os
 
 class EnvException(Exception):
+	''' Generic Environment Exception '''
 	pass
 class EnvExceptionKeyError(EnvException):
+	''' Key is not an EnvField '''
 	pass
 class EnvExceptionMissingValue(EnvException):
+	''' Value is None & was not expected to be None. '''
 	pass
 
 def todays_date_iso8601()->str:

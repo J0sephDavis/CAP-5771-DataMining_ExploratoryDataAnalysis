@@ -17,7 +17,7 @@ def todays_date_iso8601()->str:
 _default_dotenv_path:str = 'data.env'
 _unknown_field_prefix = '?!: '
 
-class EnvRequiredFields(StrEnum):
+class EnvFields(StrEnum):
 	USER_LIST='MAL_USER_LIST'
 	RANKING_LIST='MAL_RANKING_LIST'
 	ANIME_LIST='MAL_ANIME_LIST'
@@ -30,7 +30,7 @@ class EnvRequiredFields(StrEnum):
 	ANIME_FILTERED='ANIME_FILTERED' # Where the filtered anime dataset can be found
 	ANIME_CLEANED='ANIME_CLEANED' # Where the cleaned dataset can be found
 
-_env_known_fields:List[str] = [x.value for x in EnvRequiredFields]
+_env_known_fields:List[str] = [x.value for x in EnvFields]
 
 def _get_len_safe(val)->int:
 	""" Get val repr then measure len"""

@@ -39,3 +39,4 @@ def get_user_rankings(nrows:Optional[int], use_cols:Optional[List[UserRankingCol
 		nrows=nrows,
 		usecols=use_cols
 	)
+raw_dataset_length:Final[int] = 80076112

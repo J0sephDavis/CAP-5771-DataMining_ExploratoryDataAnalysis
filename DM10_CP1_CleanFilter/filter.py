@@ -2,7 +2,7 @@ import os
 from typing import Tuple,Optional
 import pandas as pd
 from pathlib import Path
-from helpers.context import EnvRequiredFields,get_env_val_safe,load_find_env
+from helpers.context import EnvFields,get_env_val_safe,load_find_env
 from plots import comparison_barchart_by_type, compare_by_group
 from __init__  import get_dataset,DatasetDescriptors
 
@@ -36,8 +36,8 @@ def generate_graph(load_env:bool):
 		load_find_env()
 	anime_raw = get_dataset()
 	
-	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvRequiredFields.CF_FOLDER_FILITED))
-	FILTERED_FILE:Path = Path(get_env_val_safe(EnvRequiredFields.ANIME_FILTERED))
+	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.CF_FOLDER_FILITED))
+	FILTERED_FILE:Path = Path(get_env_val_safe(EnvFields.ANIME_FILTERED))
 	RESULTS_FOLDER.mkdir(mode=0o775, parents=True,exist_ok=True)
 	anime_filtered, filtered_out = filter_dataset(anime_raw)
 	anime_filtered.to_csv(FILTERED_FILE, index=False)

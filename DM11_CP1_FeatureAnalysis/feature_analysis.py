@@ -80,7 +80,7 @@ def figure_mem_fav(dataset:pd.DataFrame, filename:str, clobber:bool=False):
 
 def plot_results(generate_kde_graphs:bool=True, generate_TSNE:bool=True):
 	clean_data = pd.read_csv(
-		context.get_env_val_safe(context.EnvRequiredFields.ANIME_CLEANED)
+		context.get_env_val_safe(context.EnvFields.ANIME_CLEANED)
 	)
 	clean_data['fav_per_members'] = clean_data['favorites'] / (clean_data['members']/100)
 	print(clean_data.info())

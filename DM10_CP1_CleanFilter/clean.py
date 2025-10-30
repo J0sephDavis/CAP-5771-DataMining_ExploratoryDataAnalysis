@@ -1,5 +1,5 @@
 from pathlib import Path
-from helpers.context import EnvRequiredFields,get_env_val_safe,load_find_env
+from helpers.context import EnvFields,get_env_val_safe,load_find_env
 import os
 from typing import Tuple,List, Optional
 import matplotlib.pyplot as plt
@@ -24,8 +24,8 @@ def generate_graphs(load_env:bool):
 	if load_env:
 		load_find_env()
 	anime_filtered = get_filtered_anime_dataset(None)
-	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvRequiredFields.CF_FOLDER_CLEANED))
-	CLEANED_FILE:Path = Path(get_env_val_safe(EnvRequiredFields.ANIME_CLEANED))
+	RESULTS_FOLDER:Path = Path(get_env_val_safe(EnvFields.CF_FOLDER_CLEANED))
+	CLEANED_FILE:Path = Path(get_env_val_safe(EnvFields.ANIME_CLEANED))
 	RESULTS_FOLDER.mkdir(mode=0o775, parents=True,exist_ok=True)
 	# Compare results after cleaning
 	anime_cleaned, cleaned_out = clean_dataframe(anime_filtered)

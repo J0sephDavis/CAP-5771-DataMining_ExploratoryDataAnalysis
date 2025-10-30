@@ -49,7 +49,7 @@ def generate_graph(load_env:bool):
 		_load_find_env()
 	anime_raw = _dataset.get_dataset()
 	
-	RESULTS_FOLDER = _Path(_get_env_val_safe(_EnvFields.ANIME_CF_FOLDER_FILITED))
+	RESULTS_FOLDER = _Path(_get_env_val_safe(_EnvFields.ANIME_CF_FOLDER_FILTERED))
 	RESULTS_FOLDER.mkdir(mode=0o775, parents=True,exist_ok=True)
 	try:
 		anime_filtered = _filter.get_dataset()

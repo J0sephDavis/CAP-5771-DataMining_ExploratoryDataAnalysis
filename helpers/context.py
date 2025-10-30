@@ -1,5 +1,5 @@
 from dotenv import load_dotenv, find_dotenv, dotenv_values
-from typing import Tuple, Dict, List, Optional, Any, Callable
+from typing import Tuple, Dict, List, Optional, Any, Callable, Union
 from enum import StrEnum
 import datetime
 import os
@@ -103,11 +103,20 @@ Please check the filename.
 	pretty_print_key_val(dotenv_values(path), f'{os.getcwd()}')
 	return success, path
 
-def get_env_val_safe(key:str)->str:
-	''' Get an env value safely, if the value is None, raise KeyError '''
-	val = os.getenv(key,None)
+def get_env_val_safe(key:Union[StrEnum,str], default:Optional[str]=None)->str:
+	''' Get an env value safely
+	- If key is a StrEnum, we expect it to be in our known field list; raises EnvExceptionKeyError
+	- If value is None & default is None, raises EnvExceptionMissingValue
+	- Otherwise, returns value, or default if value is None
+	'''
+	if isinstance(key,StrEnum):
+		if key not in _env_known_fields:
+			raise EnvExceptionKeyError(f'Unknown field passed to get_env_val_safe')
+
+	val = os.getenv(key,default)
+		
 	if val is None:
-		raise KeyError(f'Could not get env value with  key: {key}')
+		raise EnvExceptionMissingValue(f'Could not get env value with key: s{key}')
 	return val
 
 if __name__ == '__main__':

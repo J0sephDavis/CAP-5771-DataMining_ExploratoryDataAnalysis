@@ -31,3 +31,11 @@ class UserRankingColumn(StrEnum):
 	LAST_UPDATED		='my_last_updated'
 	TAGS				='my_tags'				# Majority missing
 
+def get_user_rankings(nrows:Optional[int], use_cols:Optional[List[UserRankingColumn]])->pd.DataFrame:
+	''' Reads the user ranking list from CSV & returns a dataframe. '''
+	user_ranking_file:Path = Path(get_env_val_safe(EnvFields.RANKING_LIST))
+	return pd.read_csv(
+		filepath_or_buffer=user_ranking_file,
+		nrows=nrows,
+		usecols=use_cols
+	)

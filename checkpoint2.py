@@ -47,9 +47,27 @@ if not loaded:
 		- SCORE
 		- STATUS
 '''
-SUBSET_NROWS:Final[int] = int(dataset.raw_dataset_length*0.15)
+SUBSET_NROWS:Final[int] = int(dataset.raw_dataset_length)
+import time
+time_start = time.time()
 user_rankings = dataset.get_user_rankings(
 	nrows = SUBSET_NROWS, # load a fraction of the dataset
 	use_cols = dataset.columns_for_retrieval
 )
+time_end = time.time()
+print(f'loaded user rankings in: {time_end-time_start} seconds')
+import AnimeList.clean
+from AnimeList.dataset import AnimeListColumns
+anime_list:pd.DataFrame = AnimeList.clean.get_clean_dataset(None,[AnimeListColumns.ANIME_ID])
+try:
+	filtered = filter.get_dataset()
+	filtered_out = filter.get_dataset_out()
+	print('Loaded filter from disk.')
+except FileNotFoundError:
+	time_start = time.time()
+	filtered, filtered_out = filter.filter_dataset(user_rankings,anime_list)
+	time_end = time.time()
+	print(f'filtered rankings in: {time_end-time_start} seconds')
+	print(f'Filtering removed: {100.0*(filtered_out.shape[0]/user_rankings.shape[0]):.2f}% ({filtered_out.shape[0]}) of records')
+
 exit()

@@ -10,11 +10,13 @@ import pandas as _pd
 from typing import (
 	Optional as _Optional,
 	List as _List,
-	Final as _Final
+	Final as _Final,
+	Union as _Union,
 )
 from enum import (
 	StrEnum as _StrEnum
 )
+from helpers.files import get_dataset as _get_dataset
 
 class UserRankingColumn(_StrEnum):
 	''' Column names from the dataset. '''
@@ -38,11 +40,7 @@ columns_for_retrieval:_Final[_List[UserRankingColumn]] = [
 	UserRankingColumn.SCORE,
 	UserRankingColumn.STATUS
 ]
-def get_user_rankings(nrows:_Optional[int], use_cols:_Optional[_List[UserRankingColumn]])->_pd.DataFrame:
+def get_user_rankings(nrows:_Optional[int], use_cols:_Optional[_List[_Union[UserRankingColumn,str]]])->_pd.DataFrame:
 	''' Reads the user ranking list from CSV & returns a dataframe. '''
 	user_ranking_file = _Path(_get_env_val_safe(_EnvFields.RANKING_LIST))
-	return _pd.read_csv(
-		filepath_or_buffer=user_ranking_file,
-		nrows=nrows,
-		usecols=use_cols
-	)
+	return _get_dataset(file=user_ranking_file, nrows=nrows, use_cols=use_cols)

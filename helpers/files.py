@@ -32,17 +32,18 @@ def get_dataset(file:_Path, nrows:_Optional[int], use_cols:_Optional[_List[str]]
 
 
 class DatasetBase:
-	nrows:_Optional[int] = None
-	path:_Optional[_Path] = None
-	frame:_Optional[_pd.DataFrame] = None
-	use_columns:_Optional[_List[_Union[str,_StrEnum]]] = None
+	''' Represents a dataframe and its relationship to a file.'''
+	nrows:_Optional[int]
+	path:_Optional[_Path]
+	frame:_Optional[_pd.DataFrame]
+	use_columns:_Optional[_List[_Union[str,_StrEnum]]]
 
 	def __init__(self,
-			nrows:_Optional[int],
-			path:_Optional[_Path],
-			frame:_Optional[_pd.DataFrame],
-			use_columns:_Optional[_List[_Union[str,_StrEnum]]],
-			try_get_frame_now:bool
+			nrows:_Optional[int] = None,
+			path:_Optional[_Path] = None,
+			frame:_Optional[_pd.DataFrame] = None,
+			use_columns:_Optional[_List[_Union[str,_StrEnum]]] = None,
+			try_get_frame_now:bool = False
 			)->None:
 		'''
 		nrows -- the number of rows you want, ONLY if you are loading from file.
@@ -52,7 +53,7 @@ class DatasetBase:
 		try_get_frame -- calls get_frame, which will load from csv / do nothng if frame is already set.
 		'''
 		self.nrows = nrows
-		self.path=path
+		self.path = path
 		self.frame = frame
 		self.use_columns = use_columns
 		if try_get_frame_now:

@@ -73,5 +73,4 @@ class AnimeListRaw(_DatasetBase):
 			path=_Path(_get_env_val_safe(_EnvFields.ANIME_LIST)),
 			frame=None,
 			use_columns=use_columns,
-			try_get_frame_now=try_get_frame_now
 		)

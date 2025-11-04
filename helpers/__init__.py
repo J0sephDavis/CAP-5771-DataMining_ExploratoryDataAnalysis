@@ -2,5 +2,6 @@ __all__ = [
 	'context',
 	'compression',
 	'plotting',
-	'files'
+	'files',
+    'exceptions'
 ]

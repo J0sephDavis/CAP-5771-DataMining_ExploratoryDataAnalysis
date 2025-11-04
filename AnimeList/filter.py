@@ -15,8 +15,8 @@ from typing import (
 )
 from .dataset import AnimeListColumns as _AnimeListColumns
 from helpers.files import DatasetBase as _DatasetBase
-
-class AnimeListFilteted(_DatasetBase):
+from .dataset import AnimeListRaw as _AnimeListRaw
+class AnimeListFiltered(_DatasetBase):
 	''' The AnimeList that has been filtered. '''
 	def __init__(self,
 		frame:_Optional[_pd.DataFrame] = None,
@@ -39,12 +39,15 @@ class AnimeListFilterOut(_DatasetBase):
 			frame=frame,
 		)
 
-def filter_dataset(anime_list:_pd.DataFrame)->_Tuple[_pd.DataFrame, _pd.DataFrame]:
+def filter_dataset(anime_list:_AnimeListRaw)->_Tuple[AnimeListFiltered, AnimeListFilterOut]:
 	'''
 	Apply filtering rules to the AnimeList dataset.
 	Returns the filtered frame & another frame containing the dropped records.
 	'''
-	frame = anime_list.copy()
+	frame = anime_list.get_frame()
+	if frame is None:
+		raise Exception('')
+	frame = frame.copy()
 	# Records
 	removed_records = frame.loc[ # for analysis
 		(frame[_AnimeListColumns.STATUS] != 'Finished Airing')
@@ -61,6 +64,4 @@ def filter_dataset(anime_list:_pd.DataFrame)->_Tuple[_pd.DataFrame, _pd.DataFram
 	# 	index=frame[(frame[_AnimeListColumns.TYPE]=='Music')|(frame[_AnimeListColumns.TYPE]=='Unknown')].index,
 	# 	inplace=True
 	# )
-	frame.to_csv(_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED)), index=False)
-	removed_records.to_csv(_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED_OUT)), index=False)
-	return frame, removed_records
+	return AnimeListFiltered(frame=frame), AnimeListFilterOut(frame=removed_records)

@@ -50,7 +50,10 @@ class DatasetBase:
 		self.path = path
 		self.frame = frame
 		self.use_columns = use_columns
-		self.load()
+		if self.frame is not None:
+			self.save()
+		elif self.path.exists():
+			self.load()
 	
 	def get_frame(self)->_Optional[_pd.DataFrame]:
 		return self.frame

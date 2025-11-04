@@ -14,23 +14,30 @@ from typing import (
 	Tuple as _Tuple,
 )
 from .dataset import AnimeListColumns as _AnimeListColumns
+from helpers.files import DatasetBase as _DatasetBase
 
-def get_dataset(
-		nrows:_Optional[int] = None,
-		use_cols:_Optional[_List[_Union[_AnimeListColumns,str]]] = None
-	)->_pd.DataFrame:
-	''' Load the filtered dataset. '''
-	PATH_TO_DATASET = _Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED))
-	return _files.get_dataset(PATH_TO_DATASET, nrows=nrows, use_cols=use_cols)
+class AnimeListFilteted(_DatasetBase):
+	''' The AnimeList that has been filtered. '''
+	def __init__(self,
+		frame:_Optional[_pd.DataFrame] = None,
+		nrows:_Optional[int] = None
+			)->None:
+		super().__init__(
+			path=_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED)),
+			frame=frame,
+			nrows=nrows,
+		)
 
-def get_out_dataset(
-		nrows:_Optional[int] = None,
-		use_cols:_Optional[_List[_Union[_AnimeListColumns,str]]] = None
-	)->_pd.DataFrame:
-	''' Load the records that were REMOVED from the dataset. '''
-	PATH_TO_DATASET = _Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED_OUT))
-	return _files.get_dataset(PATH_TO_DATASET, nrows=nrows, use_cols=use_cols)
-
+class AnimeListFilterOut(_DatasetBase):
+	''' The records that were filtered out of the AnimeList. '''
+	def __init__(self,
+		frame:_Optional[_pd.DataFrame],
+		nrows:_Optional[int] = None
+			) -> None:
+		super().__init__(nrows=nrows,
+			path=_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED_OUT)),
+			frame=frame,
+		)
 
 def filter_dataset(anime_list:_pd.DataFrame)->_Tuple[_pd.DataFrame, _pd.DataFrame]:
 	'''

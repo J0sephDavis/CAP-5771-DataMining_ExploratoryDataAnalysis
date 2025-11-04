@@ -66,7 +66,6 @@ class AnimeListRaw(_DatasetBase):
 	def __init__(self,
 			nrows:_Optional[int] = None,
 			use_columns:_Optional[_List[_Union[str,_StrEnum]]] = default_columns_for_retrieval,
-			try_get_frame_now:bool = True
 			) -> None:
 		super().__init__(
 			nrows=nrows,

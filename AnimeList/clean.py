@@ -27,7 +27,7 @@ class AnimeListClean(_DatasetBase):
 		nrows:_Optional[int] = None
 			)->None:
 		super().__init__(
-			path=_Path(_get_env_val_safe(_EnvFields.ANIME_CLEANED)),
+			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_CLEAN)),
 			frame=frame,
 			nrows=nrows,
 		)
@@ -39,7 +39,7 @@ class AnimeListCleanOut(_DatasetBase):
 		nrows:_Optional[int] = None
 			)->None:
 		super().__init__(
-			path=_Path(_get_env_val_safe(_EnvFields.ANIME_CLEANED_OUT)),
+			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_CLEAN_OUT)),
 			frame=frame,
 			nrows=nrows,
 		)

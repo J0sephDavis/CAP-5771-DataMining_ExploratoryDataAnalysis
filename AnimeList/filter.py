@@ -23,7 +23,7 @@ class AnimeListFiltered(_DatasetBase):
 		nrows:_Optional[int] = None
 			)->None:
 		super().__init__(
-			path=_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED)),
+			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER)),
 			frame=frame,
 			nrows=nrows,
 		)
@@ -34,8 +34,9 @@ class AnimeListFilterOut(_DatasetBase):
 		frame:_Optional[_pd.DataFrame],
 		nrows:_Optional[int] = None
 			) -> None:
-		super().__init__(nrows=nrows,
-			path=_Path(_get_env_val_safe(_EnvFields.ANIME_FILTERED_OUT)),
+		super().__init__(
+			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER_OUT)),
+			nrows=nrows,
 			frame=frame,
 		)
 

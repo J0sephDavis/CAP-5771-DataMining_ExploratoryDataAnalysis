@@ -45,10 +45,7 @@ class AnimeListCleanOut(_DatasetBase):
 		)
 def clean_dataset(anime_list:_AnimeListFiltered)->_Tuple[AnimeListClean, AnimeListCleanOut]:
 	''' Apply cleaning rules to the AnimeList dataset. Return the clean set & the records that were removed. '''
-	frame = anime_list.get_frame()
-	if frame is None:
-		raise Exception('')
-	frame = frame.copy()
+	frame = anime_list.get_frame().copy()
 	impossible_score:_pd.Series[bool] = (frame['score']<1)|(frame['score']>10)|(frame['score'].isnull())
 	no_members:_pd.Series[bool] = (frame['members']==0)|(frame['members'].isnull())
 	invalid_status:_pd.Series[bool] = (frame['status'].isnull())

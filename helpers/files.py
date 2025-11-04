@@ -55,7 +55,9 @@ class DatasetBase:
 		elif self.path.exists():
 			self.load()
 	
-	def get_frame(self)->_Optional[_pd.DataFrame]:
+	def get_frame(self)->_pd.DataFrame:
+		if self.frame is None:
+			raise _DatasetMissingFrame()
 		return self.frame
 
 	def load(self, force_reload:bool=False, **read_csv_kwargs)->None:

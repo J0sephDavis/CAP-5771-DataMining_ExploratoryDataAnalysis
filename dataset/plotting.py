@@ -21,9 +21,13 @@ import matplotlib.pyplot as _plt
 from helpers.files import (
 	should_continue_with_file as _should_continue_with_file,
 )
+from pathlib import Path as _Path
 DEFAULT_FIGURE_SIZE=(10,10)
 DEFAULT_FIGURE_DPI=500
 ROWS_TO_READ:_Optional[int] = None
+import logging as _logging
+from helpers.context import APP_LOGGER_NAME as _APP_NAME
+_logger = _logging.getLogger(f'{_APP_NAME}.dataset.plotting')
 
 class PlotTSNE(_DatasetProtocolFrame):
 	''' TSNE Plot. '''
@@ -41,14 +45,19 @@ class PlotTSNE(_DatasetProtocolFrame):
 		tsne_data: should be a copy of the data, containing all columns you want to process
 		Returns the tsne_results, the name of the x column, the name of the y column.
 		'''
-		time_started = _time.time()
+		_logger.info('Plotting TSNE...')
 		tsne_x_column:str = f'TSNE-X perp:{perplexity} max:{max_iter}'
 		tsne_y_column:str = f'TSNE-Y perp:{perplexity} max:{max_iter}'
 
-		tsne = _TSNE(perplexity=perplexity, max_iter=max_iter, n_iter_without_progress=no_progress_iter)
+		time_started = _time.time()
+		tsne = _TSNE(
+			perplexity=perplexity,
+			max_iter=max_iter,
+			n_iter_without_progress=no_progress_iter
+		)
 		tsne_res = tsne.fit_transform(self.plot_tsne_transform_data())
-		print('tsne P:{} completed in {} sec'.format(perplexity, _time.time()-time_started))
-		
+
+		_logger.info('plot_tsne P:{} completed in {} sec'.format(perplexity, _time.time()-time_started))
 		return (_pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column]),
 			tsne_x_column, tsne_y_column
 		)
@@ -58,6 +67,7 @@ class PlotJointGridKDE(_DatasetProtocolFrame):
 	''' KDE Joint Grid plot. '''
 	@_abstractmethod
 	def plot_jg_transform_data(self)->_pd.DataFrame:
+		''' Transform the data, if needed, before JointGrid KDE plotting. '''
 		pass
 
 	def plot_jg(self,
@@ -94,6 +104,7 @@ class PlotJointGridKDE(_DatasetProtocolFrame):
 		jg.figure.subplots_adjust(top=0.98, left=0.16)
 		jg.figure.set_size_inches(DEFAULT_FIGURE_SIZE)
 		jg.figure.set_dpi(DEFAULT_FIGURE_DPI)
+		_logger.info('plotted joint grid.')
 		return jg
 	
 class PlotScatter(_DatasetProtocolFrame):
@@ -105,18 +116,19 @@ class PlotScatter(_DatasetProtocolFrame):
 			data:_pd.DataFrame,
 			x_column:str,
 			y_column:str,
-			file_name:str,
+			file_name:_Path,
 			hue_column:_Optional[str]=None,
 			style_column:_Optional[str] = None,
 			clobber:bool=False,
 			raise_err_no_clob:bool=False,
 			)->_Optional[_Tuple[_Figure,_Axes]]:
 		''' Plots scatterplot and returns None or figures,axes'''
-		should_cont, already_exists = should_continue_with_file(
+		_logger.info('Plotting scatter')
+		should_cont = _should_continue_with_file(
 			filename=file_name, clobber=True, raise_exception=True
 		)
 		if not should_cont:
-			print(f'TSNE not plotted {file_name} already exists.')
+			_logger.warning(f'TSNE not plotted {file_name} already exists.')
 			return None
 		f,ax = _plt.subplots()
 		scatter = _sns.scatterplot(ax=ax,
@@ -128,5 +140,5 @@ class PlotScatter(_DatasetProtocolFrame):
 		f.set_size_inches(DEFAULT_FIGURE_SIZE)
 		f.set_dpi(DEFAULT_FIGURE_DPI)
 		f.savefig(file_name)
-		print(f'PLOT_TSNE, Saved figure: {file_name}')
+		_logger.info(f'plot_scatter, TODO: saving figure should be callers responsibility. Saved figure: {file_name}')
 		return (f,ax)

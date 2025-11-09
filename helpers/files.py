@@ -13,19 +13,26 @@ from .exceptions import (
 	DatasetFileExists as _DatasetFileExists,
 	DatasetMissingFrame as _DatasetMissingFrame,
 )
-def should_continue_with_file(filename:str, clobber:bool=False, raise_exception:bool=True)->_Tuple[bool,bool]:
+import logging as _logging
+_logger = _logging.getLogger('DM04.Helpers.Files')
+
+def should_continue_with_file(
+		filename:_Path,
+		clobber:bool=False,
+		raise_exception:bool=True
+	)->bool:
 	''' Returns (continue_with_operation, file_already_exists)'''
-	path = _Path(filename)
-	if not path.exists():
-		return True,False # Continue, file does not exist.
-	if clobber:
-		print(f'WARNING, {filename} already exists. Overwriting.')
-		return True,True # Continue, clobber file.
-	if (raise_exception):
-		raise FileExistsError(f'{filename}')
-	else:
-		print(f'WARNING, {filename} already exists. Do not continue.')
-		return False,True # Do not continue, file already exists
+	exists:bool = filename.exists()
+	if exists:
+		if clobber:
+			_logger.warning(f'File already exists, allowing overwrite. {filename}')
+			return True
+		elif raise_exception:
+			err =  FileExistsError(f'File already exists. {filename}')
+			_logger.error('should_continue_with_file',exc_info=err)
+			raise err
+		return False
+	return True
 	
 class DatasetBase:
 	''' Represents a dataframe and its relationship to a file.'''

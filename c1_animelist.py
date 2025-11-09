@@ -1,4 +1,3 @@
-from helpers.files import DatasetBase
 from AnimeList.filter import (
     AnimeListFiltered, AnimeListFilterOut, filter_dataset
 )
@@ -17,14 +16,15 @@ from helpers.context import (
     EnvFields,
     get_env_val_safe,
 )
-def __label_copy(db:DatasetBase, label:str, descriptor_col:str)->pd.DataFrame:
+from dataset.protocols import DatasetProtocolFrame
+def __label_copy(db:DatasetProtocolFrame, label:str, descriptor_col:str)->pd.DataFrame:
     frame = db.get_frame().copy()
     frame[descriptor_col] = label
     return frame
 
 def plot_removed(
-        result:DatasetBase,
-        removed:DatasetBase,
+        result:DatasetProtocolFrame,
+        removed:DatasetProtocolFrame,
         result_label:str,
         removed_label:str,
         folder:Path,
@@ -66,7 +66,7 @@ def run():
         EnvFields.DIR_FIGURES_ANIME_CLEAN,
         EnvFields.DIR_FIGURES_ANIME_COMPARISON,
         EnvFields.DIR_FIGURES_ANIME_FILTER,
-        EnvFields.DIR_GENERATED_DATASETS,
+        EnvFields.DIR_ANIME_DATASETS,
     ]
     for key in folders:
         Path(get_env_val_safe(key)).mkdir(exist_ok=True, parents=True, mode=0o777)
@@ -93,3 +93,5 @@ def run():
         clean=clean,
         descriptor_col=descriptor_col
     )
+    filtered.save(index=False)
+    clean.save(index=False)

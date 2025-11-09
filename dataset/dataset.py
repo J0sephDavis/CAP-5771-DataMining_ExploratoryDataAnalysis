@@ -23,6 +23,3 @@ class DatasetLoadCSV(_DatasetLoadable):
 class DatasetCSV(DatasetSaveCSV, _DatasetLoadable):
 	def __init__(self) -> None:
 		super().__init__()
-
-if __name__ == '__main__':
-	pass

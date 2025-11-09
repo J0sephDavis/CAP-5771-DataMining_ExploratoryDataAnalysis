@@ -94,7 +94,7 @@ def prefilter_rankings(
 		anime_list:AnimeListClean,
 		)->Tuple[UserListPreFilter, UserListPreFilterOut]:
 	''' Exclude all rankings which do not include an anime id from the anime_list.'''
-	_logger.info('UserListPreFilter#pre_filter_dataset')
+	_logger.debug('prefilter_rankings()')
 	ranking_frame = raw_rankings.get_frame().copy()
 	anime_ids = anime_list.get_frame()[AnimeListColumns.ANIME_ID]
 
@@ -108,6 +108,7 @@ def prefilter_rankings(
 	return ULFP, ULFPO
 
 def clean_rankings(ranking:UserListPreFilter)->Tuple[UserListClean, UserListCleanOut]:
+	_logger.debug('clean_rankings()')
 	frame = ranking.get_frame().copy()
 	invalid_score = frame.loc[ # Score out of bounds or null.
 		(
@@ -150,6 +151,7 @@ def clean_rankings(ranking:UserListPreFilter)->Tuple[UserListClean, UserListClea
 
 def filter_rankings(cleaned_rankings:UserListClean)->Tuple[UserListFilter,UserListFilterOut]:
 	''' Filters based on criteria. Aka the Post Filter. '''
+	_logger.debug('filter_rankings()')
 	frame = cleaned_rankings.get_frame().copy()
 	'''TODO
 	- [ ] Status
@@ -216,11 +218,11 @@ def run():
 
 	# Print differecnes
 	output:List[str] = [
-		'Lengths of each list:',
-		f'0\tRaw Rankings: {user_rankings.get_frame().shape[0]}'
-		f'1\tPrefiltered: {pref.get_frame().shape[0]}'
-		f'2\tCleaned: {clean.get_frame().shape[0]}'
-		f'3\tFiltered: {filtered.get_frame().shape[0]}'
+		'\nLengths of each list:',
+		f'0\tRaw Rankings: {user_rankings.get_frame().shape[0]}',
+		f'1\tPrefiltered: {pref.get_frame().shape[0]}',
+		f'2\tCleaned: {clean.get_frame().shape[0]}',
+		f'3\tFiltered: {filtered.get_frame().shape[0]}',
 	]
 	_logger.info('\n'.join(output))
 	# ---

@@ -32,6 +32,9 @@ def todays_date_iso8601()->str:
 _default_dotenv_path:str = 'data.env'
 _unknown_field_prefix = '?!: '
 APP_LOGGER_NAME='DM04'
+import logging as _logging
+_logger = _logging.getLogger(f'{APP_LOGGER_NAME}.helpers.context')
+
 class EnvFields(_StrEnum):
 	USER_LIST='MAL_USER_LIST'
 	RANKING_LIST='MAL_RANKING_LIST'
@@ -94,17 +97,18 @@ def pretty_print_key_val(env_vals:_Dict, remove_prefix:_Optional[str]=_os.getcwd
 	
 	header:str = f" {'KEY':{max_key_len}s} | {'VALUE':{max_value_len}s}"
 	separator:str = '-'*len(header)
-	print(separator,header,separator,sep='\n')
+	output:_List[str] = [separator,header,separator]
 	for k,v in env_vals.items():
 		v = preprocess_value(v)
 		if (k not in _env_known_fields):
 			k = f'{_unknown_field_prefix}{k}'
-		print(' {0:{key_col_width}s} | {1:{value_col_width}s}'.format(
+		output.append(' {0:{key_col_width}s} | {1:{value_col_width}s}'.format(
 			k,v,
 			key_col_width=max_key_len,
 			value_col_width=max_value_len)
 		)
-	print(separator)
+	output.append(separator)
+	_logger.info('\n'.join(output))
 
 def load_find_env(
 			dotenv_path:str=_default_dotenv_path, override_env:bool=True,
@@ -118,16 +122,11 @@ def load_find_env(
 			raise_error_if_not_found=raise_error_if_not_found
 		)
 	except OSError as e:
-		print( # Begin formatted block, do not indent.
-f"""
-{str(e.__class__)}{'-'*(80-len(str(e.__class__)))}
-{e}
-	find_dotenv could not find the requested dotenv.
-	dotenv_path:{dotenv_path}
-	use_cwd:{use_cwd}.
-Please check the filename.
-{'-'*80}"""
-		) # End formatted block.
+		_logger.error(f"find_dotenv could not find the requested dotenv.\
+			dotenv_path:{dotenv_path} use_cwd:{use_cwd}.\
+			Please check the filename.",
+			exc_info=e
+		)
 		raise e # Raise again to stop execution & print traceback
 	success = _load_dotenv(dotenv_path=path, override=override_env)
 	pretty_print_key_val(_dotenv_values(path), f'{pretty_print_remove_suffix}')
@@ -141,13 +140,15 @@ def get_env_val_safe(key:_Union[_StrEnum,str], default:_Optional[str]=None)->str
 	'''
 	if isinstance(key,_StrEnum):
 		if key not in _env_known_fields:
-			raise EnvExceptionKeyError(f'Unknown field passed to get_env_val_safe')
+			err =  EnvExceptionKeyError(f'Unknown field passed to get_env_val_safe')
+			_logger.error('get_env_val_safe:',exc_info=err)
+			raise err
 
 	val = _os.getenv(key,default)
 		
 	if val is None:
-		raise EnvExceptionMissingValue(f'Could not get env value with key: {key}')
+		err = EnvExceptionMissingValue(f'Could not get env value with key: {key}')
+		_logger.error('get_env_val_safe:',exc_info=err)
+		raise err
+	_logger.info(f'get_env_val_safe->{val}')
 	return val
-
-if __name__ == '__main__':
-	loaded,path = load_find_env(pretty_print_remove_suffix=_os.getcwd())

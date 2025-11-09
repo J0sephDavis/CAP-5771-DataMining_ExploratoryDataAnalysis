@@ -1,14 +1,36 @@
-from helpers.context import get_env_val_safe,EnvFields
+from helpers.context import (
+	get_env_val_safe,
+	EnvFields,
+	APP_LOGGER_NAME,
+)
 from pathlib import Path
 import pandas as pd
-from typing import Optional, List, Final
+from typing import (
+	Optional,
+	List,
+	Final,
+)
 from enum import StrEnum
 from RankingList import (
 	dataset,
 	filter,
 	clean,
 )
-
+from RankingList.dataset import (
+	UserRankingList
+)
+from RankingList.clean import (
+	UserListClean,
+)
+from RankingList.filter import (
+	UserListFilter,
+	UserListPreFilter,
+)
+import time
+import AnimeList.clean
+from AnimeList.dataset import AnimeListColumns
+import logging as _logging
+_logger = _logging.getLogger(f'{APP_LOGGER_NAME}.CP2')
 ''' TODO
 - [ ] Fetch dataset
 
@@ -44,67 +66,67 @@ from RankingList import (
 		- SCORE
 		- STATUS
 '''
-
+class Stopwatch():
+	''' class used to print time durations. '''
+	start_time:float
+	end_time:float
+	def __init__(self):
+		self.start_time=0
+		self.end_time=0
+	def start(self):
+		self.start_time = time.time()
+	def end(self):
+		self.end_time = time.time()
+	def __str__(self):
+		seconds = self.end_time - self.start_time
+		if seconds > 60:
+			return f'{seconds:0.2f}s / {seconds/60:0.2f} minutes'
+		else:
+			return f'{seconds:0.2f}s'
 def run():
+	_logger.info('Begin.')
 	SUBSET_NROWS:Final[int] = int(dataset.raw_dataset_length)
-	import time
-	print('get user rankings')
-	time_start = time.time()
-	user_rankings = dataset.get_user_rankings(
-		nrows = SUBSET_NROWS, # load a fraction of the dataset
-		use_cols = dataset.columns_for_retrieval
-	)
-	time_end = time.time()
-	print(f'loaded user rankings in: {time_end-time_start} seconds')
-	import AnimeList.clean
-	from AnimeList.dataset import AnimeListColumns
-	print('get anime list')
-	anime_list:pd.DataFrame = AnimeList.clean.get_clean_dataset(None,[AnimeListColumns.ANIME_ID])
+	_logger.info('Fetch raw user_rankings and the clean anime_list')
+	user_rankings = dataset.UserRankingList(nrows=SUBSET_NROWS,usecols=dataset.columns_for_retrieval)
+	anime_list = AnimeList.clean.AnimeListClean(usecols=[AnimeListColumns.ANIME_ID])
 
 	# order of operations
 	# - FILTER_1 (filters by anime_list)
 	# - CLEAN_1 (removes invalid records)
 	# - FILTER_2 (filters to what we want)
+	sw = Stopwatch()
 
 	# PRE FILTER - Remove records where the ANIME_ID is not found in our cleaned anime list
-	try:
-		print('> Try load pre filter dataset from file')
-		pre_filtered = filter.get_dataset()
-		pre_filtered_out = filter.get_dataset_out()
-		print('Loaded pre filter dataset from disk.')
-	except FileNotFoundError:
-		print('> pre Filter')
-		time_start = time.time()
-		pre_filtered, pre_filtered_out = filter.pre_filter_dataset(user_rankings,anime_list,False)
-		time_end = time.time()
-		print(f'PRE Filtered rankings in: {time_end-time_start} seconds')
-		print(f'PRE Filtering removed: {100.0*(pre_filtered_out.shape[0]/user_rankings.shape[0]):.2f}% ({pre_filtered_out.shape[0]}) of records')
+	_logger.info('Perform Prefiltering on raw data... (The removal of anime_id not found in our clean dataset).')	
+	sw.start()
+	pref,prefo = UserListPreFilter.from_rankings(
+		raw_rankings=user_rankings, anime_list=anime_list
+	)
+	sw.end()
+	_logger.info(f'Prefiltering(1) took: {str(sw)}')
 
-	# CLEAN - Remove invalid/impossible values & replace values where we can.
-	try:
-		print('> Try load clean dataset from file')
-		cleaned = clean.get_dataset()
-		cleaned_out = clean.get_dataset_out()
-		print('Loaded clean dataset from disk.')
-	except FileNotFoundError:
-		print('> Clean')
-		time_start = time.time()
-		cleaned,cleaned_out = clean.clean_dataset(pre_filtered, anime_list, False)
-		time_end = time.time()
-		print(f'Cleaned rankings in: {time_end-time_start} seconds')
-		print(f'Cleaning removed: {100.0*(cleaned_out.shape[0]/pre_filtered.shape[0]):.2f}% ({cleaned.shape[0]}) of records')
+	_logger.info('Perform cleaning on prefiltered data...')
+	sw.start()
+	clean, cleanedOut = UserListClean.from_filter(ranking=pref)
+	sw.end()
+	_logger.info(f'Cleaning(2) took: {str(sw)}')
 
-	# POST FILTER - Get only the records we care about
-	try:
-		print('> Try load pre filter dataset from file')
-		filtered = filter.get_dataset()
-		filtered_out = filter.get_dataset_out()
-		print('Loaded pre filter dataset from disk.')
-	except FileNotFoundError:
-		print('> pre Filter')
-		time_start = time.time()
-		filtered, filtered_out = filter.pre_filter_dataset(user_rankings,anime_list,False)
-		time_end = time.time()
-		print(f'PRE Filtered rankings in: {time_end-time_start} seconds')
-		print(f'PRE Filtering removed: {100.0*(filtered_out.shape[0]/cleaned.shape[0]):.2f}% ({filtered_out.shape[0]}) of records')
+	
+	_logger.info('Perform filtering on cleaned data...')
+	sw.start()
+	filtered, filteredOut = UserListFilter.from_clean(cleaned_rankings=clean)
+	sw.end()
+	_logger.info(f'Filtering(3) took: {str(sw)}')
+
+	# Print differecnes
+	output:List[str] = [
+		'Lengths of each list:',
+		f'0\tRaw Rankings: {user_rankings.get_frame().shape[0]}'
+		f'1\tPrefiltered: {pref.get_frame().shape[0]}'
+		f'2\tCleaned: {clean.get_frame().shape[0]}'
+		f'3\tFiltered: {filtered.get_frame().shape[0]}'
+	]
+	_logger.info('\n'.join(output))
+	# ---
+	_logger.info('End.')
 	return

@@ -1,8 +1,10 @@
+import logging as _logging
 from helpers.context import (
-	load_find_env as _load_find_env,
 	get_env_val_safe as _get_env_val_safe,
-	EnvFields as _EnvFields
+	EnvFields as _EnvFields,
+	APP_LOGGER_NAME as _APP_LOGGER_NAME,
 )
+from dataset.dataset import DatasetCSV as _DatasetCSV
 from pathlib import (
 	Path as _Path
 )
@@ -14,9 +16,11 @@ from typing import (
 	Union as _Union,
 )
 from enum import (
-	StrEnum as _StrEnum
+	StrEnum as _StrEnum,
+	IntEnum as _IntEnum
 )
-from helpers.files import get_dataset as _get_dataset
+
+_logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.RankingList.dataset')
 
 class UserRankingColumn(_StrEnum):
 	''' Column names from the dataset. '''
@@ -32,7 +36,6 @@ class UserRankingColumn(_StrEnum):
 	LAST_UPDATED		='my_last_updated'
 	TAGS				='my_tags'				# Majority missing
 
-from enum import IntEnum as _IntEnum
 class StatusEnum(_IntEnum):
 	WATCHING=1
 	COMPLETED=2
@@ -48,7 +51,16 @@ columns_for_retrieval:_Final[_List[_Union[UserRankingColumn,str]]] = [
 	UserRankingColumn.SCORE,
 	UserRankingColumn.STATUS
 ]
-def get_user_rankings(nrows:_Optional[int], use_cols:_Optional[_List[_Union[UserRankingColumn,str]]])->_pd.DataFrame:
-	''' Reads the user ranking list from CSV & returns a dataframe. '''
-	user_ranking_file = _Path(_get_env_val_safe(_EnvFields.RANKING_LIST))
-	return _get_dataset(file=user_ranking_file, nrows=nrows, use_cols=use_cols)
+
+class UserRankingList(_DatasetCSV):
+	''' The user list with a default subset selected'''
+	def __init__(self,
+				frame:_Optional[_pd.DataFrame]=None,
+				path=_Path(_get_env_val_safe(_EnvFields.RANKING_LIST)),
+				nrows:_Optional[int] = None,
+				usecols:_Optional[_List[_Union[UserRankingColumn,str]]] = columns_for_retrieval
+			  ) -> None:
+		super().__init__(frame, path)
+		_logger.debug(f'UserList.__init__(frame:{frame}, path:{path})')
+		if self.frame is None:
+			self.load(usecols=usecols, nrows=nrows)

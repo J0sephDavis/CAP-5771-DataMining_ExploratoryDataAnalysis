@@ -5,7 +5,6 @@ import pandas as _pd
 from typing import (
 	Optional as _Optional,
 	List as _List,
-	Tuple as _Tuple,
 	Union as _Union,
 )
 from enum import StrEnum as _StrEnum
@@ -14,7 +13,8 @@ from .exceptions import (
 	DatasetMissingFrame as _DatasetMissingFrame,
 )
 import logging as _logging
-_logger = _logging.getLogger('DM04.Helpers.Files')
+from .context import APP_LOGGER_NAME as _APP_LOGGER_NAME
+_logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.Helpers.Files')
 
 def should_continue_with_file(
 		filename:_Path,

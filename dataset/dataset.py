@@ -24,7 +24,14 @@ class DatasetLoadCSV(_DatasetLoadable):
 
 class DatasetCSV(DatasetSaveCSV, DatasetLoadCSV):
 	file:_Path
-	def __init__(self, frame:_Optional[_pd.DataFrame], path:_Path) -> None:
+	def __init__(self, frame:_Optional[_pd.DataFrame], file:_Path) -> None:
 		self.frame = frame
-		self.path = path
+		self.file = file
+		super().__init__()
+
+class DatasetCSVReadOnly(DatasetLoadCSV):
+	file:_Path
+	def __init__(self, frame:_Optional[_pd.DataFrame], file:_Path) -> None:
+		self.frame = frame
+		self.file = file
 		super().__init__()

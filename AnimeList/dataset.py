@@ -16,7 +16,7 @@ from typing import (
 from enum import (
 	StrEnum as _StrEnum
 )
-from dataset.dataset import DatasetCSV as _DatasetCSV
+from dataset.dataset import DatasetCSVReadOnly as _DatasetCSVReadonly
 import logging as _logging
 _logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.AnimeList.dataset')
 
@@ -66,7 +66,7 @@ default_columns_for_retrieval:_Final[_List[_Union[AnimeListColumns,str]]] = [
 	AnimeListColumns.MEMBERS,
 	AnimeListColumns.FAVORITES,
 ]
-class AnimeListRaw(_DatasetCSV):
+class AnimeListRaw(_DatasetCSVReadonly):
 	def __init__(self,
 				frame:_Optional[_pd.DataFrame]=None,
 				path=_Path(_get_env_val_safe(_EnvFields.ANIME_LIST)),

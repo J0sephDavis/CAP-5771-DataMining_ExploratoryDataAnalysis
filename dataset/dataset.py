@@ -1,8 +1,10 @@
 import pandas as _pd
+from typing import Optional as _Optional
+from pathlib import Path as _Path
+
 from helpers.exceptions import (
 	DatasetNotFound as _DatasetNotFound,
 )
-
 from .protocols import (
 	DatasetSavable as _DatasetSavable,
 	DatasetLoadable as _DatasetLoadable,
@@ -20,6 +22,9 @@ class DatasetLoadCSV(_DatasetLoadable):
 			raise _DatasetNotFound('Could not find the dataset.')
 		self.frame = _pd.read_csv(self.file, **kwargs)
 
-class DatasetCSV(DatasetSaveCSV, _DatasetLoadable):
-	def __init__(self) -> None:
+class DatasetCSV(DatasetSaveCSV, DatasetLoadCSV):
+	file:_Path
+	def __init__(self, frame:_Optional[_pd.DataFrame], path:_Path) -> None:
+		self.frame = frame
+		self.path = path
 		super().__init__()

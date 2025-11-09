@@ -173,6 +173,7 @@ def filter_rankings(cleaned_rankings:UserListClean)->Tuple[UserListFilter,UserLi
 
 def run():
 	_logger.info('Begin.')
+	sw = Stopwatch()
 	folders:List[str] = [
 		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
 		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
@@ -185,14 +186,19 @@ def run():
 
 	SUBSET_NROWS:Final[int] = int(ranking_list_raw_len)
 	_logger.info('Fetch raw user_rankings and the clean anime_list')
+	sw.start()
 	user_rankings = UserRankingList(nrows=SUBSET_NROWS,usecols=ranking_list_columns_for_retrieval)
+	sw.end()
+	_logger.info(f'Loading user rankings took {str(sw)}')
+	sw.start()
 	anime_list = AnimeListClean(usecols=[AnimeListColumns.ANIME_ID])
+	sw.end()
+	_logger.info(f'Loading the anime list took {str(sw)}')
 
 	# order of operations
 	# - FILTER_1 (filters by anime_list)
 	# - CLEAN_1 (removes invalid records)
 	# - FILTER_2 (filters to what we want)
-	sw = Stopwatch()
 
 	# PRE FILTER - Remove records where the ANIME_ID is not found in our cleaned anime list
 	_logger.info('Perform Prefiltering on raw data... (The removal of anime_id not found in our clean dataset).')	

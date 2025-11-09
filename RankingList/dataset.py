@@ -43,7 +43,7 @@ class StatusEnum(_IntEnum):
 	DROPPED=4
 	PLAN_TO_WATCH=6
 
-raw_dataset_length:_Final[int] = 80076112
+ranking_list_raw_len:_Final[int] = 80076112
 columns_for_retrieval:_Final[_List[_Union[UserRankingColumn,str]]] = [
 	UserRankingColumn.ANIME_ID,
 	UserRankingColumn.USERNAME,

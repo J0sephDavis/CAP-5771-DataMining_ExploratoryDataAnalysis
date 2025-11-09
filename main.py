@@ -30,20 +30,20 @@ from helpers.context import load_find_env
 load_find_env()
 
 
-@dataclass
 class control_flow:
 	run_checkpoint_one:ClassVar[bool] = True
 	run_checkpoint_two:ClassVar[bool] = True
+
 try:
-	logger.info(f'run_checkpoint_one: {control_flow.run_checkpoint_one}')
+	logger.info(f'control flow: {vars(control_flow)}')
 	if control_flow.run_checkpoint_one:
 		import c1_animelist
 		c1_animelist.run()
 
-	logger.info(f'run_checkpoint_two: {control_flow.run_checkpoint_two}')
 	if control_flow.run_checkpoint_two:
 		import checkpoint2
 		checkpoint2.run()
+		
 except Exception as e:
 	logger.error('Exception in main:',exc_info=e)
 	logging.shutdown()

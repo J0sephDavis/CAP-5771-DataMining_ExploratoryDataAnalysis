@@ -130,7 +130,7 @@ Please check the filename.
 		) # End formatted block.
 		raise e # Raise again to stop execution & print traceback
 	success = _load_dotenv(dotenv_path=path, override=override_env)
-	pretty_print_key_val(_dotenv_values(path), f'{_os.getcwd()}')
+	pretty_print_key_val(_dotenv_values(path), f'{pretty_print_remove_suffix}')
 	return success, path
 
 def get_env_val_safe(key:_Union[_StrEnum,str], default:_Optional[str]=None)->str:

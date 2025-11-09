@@ -48,5 +48,6 @@ except Exception as e:
 	logger.error('Exception in main:',exc_info=e)
 	logging.shutdown()
 	raise e
-logger.error('Exit.')
+logger.info('Exit.')
 logging.shutdown()
+exit()

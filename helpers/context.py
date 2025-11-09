@@ -31,7 +31,7 @@ def todays_date_iso8601()->str:
 
 _default_dotenv_path:str = 'data.env'
 _unknown_field_prefix = '?!: '
-
+APP_LOGGER_NAME='DM04'
 class EnvFields(_StrEnum):
 	USER_LIST='MAL_USER_LIST'
 	RANKING_LIST='MAL_RANKING_LIST'

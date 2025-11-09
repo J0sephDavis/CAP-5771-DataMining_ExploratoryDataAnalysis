@@ -9,14 +9,7 @@ from pathlib import (
 import pandas as _pd
 from typing import (
 	Optional as _Optional,
-	List as _List,
-	Sequence as _Sequence,
-	Final as _Final,
-	Union as _Union,
 	Tuple as _Tuple,
-)
-from enum import (
-	StrEnum as _StrEnum
 )
 from .filter import AnimeListFiltered as _AnimeListFiltered
 

@@ -74,4 +74,4 @@ class AnimeListRaw(_DatasetCSVReadonly):
 		super().__init__(frame, path)
 		_logger.debug(f'AnimeListRaw.__init__(frame:{frame}, path:{path})')
 		if self.frame is None:
-			self.load(use_cols=default_columns_for_retrieval)
+			self.load(usecols=default_columns_for_retrieval)

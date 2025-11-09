@@ -1,6 +1,10 @@
 from typing import (
 	Protocol as _Protocol,
-	Optional as _Optional
+	Optional as _Optional,
+	Type as _Type,
+)
+from enum import (
+	StrEnum as _StrEnum
 )
 from pathlib import (
 	Path as _Path
@@ -8,14 +12,13 @@ from pathlib import (
 import pandas as _pd
 from helpers.exceptions import (
 	DatasetMissingFrame as _DatasetMissingFrame,
-	DatasetNotFound as _DatasetNotFound,
 )
 from abc import (
 	ABC as _ABC,
 	abstractmethod as _abstractmethod,
 )
 
-class DatasetProtoclFrame(_Protocol):
+class DatasetProtocolFrame(_Protocol):
 	''' Describes the dataframe.
 	frame -- Optional because it may not have been loaded yet.
 	'''
@@ -30,14 +33,14 @@ class DatasetProtocolFile(_Protocol):
 	''' Describes the file. '''
 	file:_Path # The path to the object
 
-class DatasetSavable(DatasetProtocolFile, DatasetProtoclFrame, _ABC):
+class DatasetSavable(DatasetProtocolFile, DatasetProtocolFrame, _ABC):
 	''' Base class for saving implementations '''
 	@_abstractmethod
 	def save(self, **kwargs)->None:
 		''' Save frame to a file. '''
 		pass
-	
-class DatasetLoadable(DatasetProtocolFile, DatasetProtoclFrame, _ABC):
+
+class DatasetLoadable(DatasetProtocolFile, DatasetProtocolFrame, _ABC):
 	''' Base class for loading implementations'''
 	@_abstractmethod
 	def load(self)->None:

@@ -1,6 +1,8 @@
+import pandas as _pd
 from helpers.context import (
 	get_env_val_safe as _get_env_val_safe,
 	EnvFields as _EnvFields,
+	APP_LOGGER_NAME as _APP_LOGGER_NAME,
 )
 from pathlib import (
 	Path as _Path,
@@ -14,7 +16,9 @@ from typing import (
 from enum import (
 	StrEnum as _StrEnum
 )
-from helpers.files import DatasetBase as _DatasetBase
+from dataset.dataset import DatasetCSV as _DatasetCSV
+import logging as _logging
+_logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.AnimeList.dataset')
 
 class AnimeListColumns(_StrEnum):
 	''' Column names from the dataset. '''
@@ -62,14 +66,12 @@ default_columns_for_retrieval:_Final[_List[_Union[AnimeListColumns,str]]] = [
 	AnimeListColumns.MEMBERS,
 	AnimeListColumns.FAVORITES,
 ]
-class AnimeListRaw(_DatasetBase):
+class AnimeListRaw(_DatasetCSV):
 	def __init__(self,
-			nrows:_Optional[int] = None,
-			use_columns:_Optional[_List[_Union[str,_StrEnum]]] = default_columns_for_retrieval,
-			) -> None:
-		super().__init__(
-			nrows=nrows,
-			path=_Path(_get_env_val_safe(_EnvFields.ANIME_LIST)),
-			frame=None,
-			use_columns=use_columns,
-		)
+				frame:_Optional[_pd.DataFrame]=None,
+				path=_Path(_get_env_val_safe(_EnvFields.ANIME_LIST)),
+			  ) -> None:
+		super().__init__(frame, path)
+		_logger.debug(f'AnimeListRaw.__init__(frame:{frame}, path:{path})')
+		if self.frame is None:
+			self.load(use_cols=default_columns_for_retrieval)

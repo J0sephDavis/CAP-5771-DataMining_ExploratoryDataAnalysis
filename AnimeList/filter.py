@@ -1,6 +1,7 @@
 from helpers.context import (
 	get_env_val_safe as _get_env_val_safe,
 	EnvFields as _EnvFields,
+	APP_LOGGER_NAME as _APP_LOGGER_NAME,
 )
 from helpers import files as _files
 from pathlib import (
@@ -14,37 +15,40 @@ from typing import (
 	Tuple as _Tuple,
 )
 from .dataset import AnimeListColumns as _AnimeListColumns
-from helpers.files import DatasetBase as _DatasetBase
+from dataset.dataset import DatasetCSV as _DatasetCSV
 from .dataset import AnimeListRaw as _AnimeListRaw
-class AnimeListFiltered(_DatasetBase):
+import logging as _logging
+_logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.AnimeList.filter')
+class AnimeListFiltered(_DatasetCSV):
 	''' The AnimeList that has been filtered. '''
 	def __init__(self,
-		frame:_Optional[_pd.DataFrame] = None,
-		nrows:_Optional[int] = None
-			)->None:
-		super().__init__(
-			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER)),
-			frame=frame,
-			nrows=nrows,
-		)
-
-class AnimeListFilterOut(_DatasetBase):
-	''' The records that were filtered out of the AnimeList. '''
-	def __init__(self,
-		frame:_Optional[_pd.DataFrame],
-		nrows:_Optional[int] = None
+			  frame:_Optional[_pd.DataFrame] = None,
+			  path:_Path = _Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER))
 			) -> None:
-		super().__init__(
-			path=_Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER_OUT)),
-			nrows=nrows,
-			frame=frame,
-		)
+		_logger.debug(f'AnimeListFiltered.__init__(frame:{frame}, path:{path})')
+		super().__init__(frame, path)
+		if self.frame is None:
+			_logger.debug('AnimeListFiltered.__init__: attempting to load csv')
+			self.load()
+
+class AnimeListFilterOut(_DatasetCSV):
+	''' The AnimeList that has been filtered. '''
+	def __init__(self,
+			  frame:_Optional[_pd.DataFrame] = None,
+			  path:_Path = _Path(_get_env_val_safe(_EnvFields.CSV_ANIME_FILTER_OUT))
+			) -> None:
+		_logger.debug(f'AnimeListFilterOut.__init__(frame:{frame}, path:{path})')
+		super().__init__(frame, path)
+		if self.frame is None:
+			_logger.debug('AnimeListFilterOut.__init__: attempting to load csv')
+			self.load()
 
 def filter_dataset(anime_list:_AnimeListRaw)->_Tuple[AnimeListFiltered, AnimeListFilterOut]:
 	'''
 	Apply filtering rules to the AnimeList dataset.
 	Returns the filtered frame & another frame containing the dropped records.
 	'''
+	_logger.debug('filter_dataset')
 	frame = anime_list.get_frame()
 	if frame is None:
 		raise Exception('')

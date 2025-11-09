@@ -22,12 +22,15 @@ from helpers.files import (
 	should_continue_with_file as _should_continue_with_file,
 )
 from pathlib import Path as _Path
-DEFAULT_FIGURE_SIZE=(10,10)
-DEFAULT_FIGURE_DPI=500
-ROWS_TO_READ:_Optional[int] = None
 import logging as _logging
 from helpers.context import APP_LOGGER_NAME as _APP_NAME
+
+DEFAULT_FIGURE_SIZE=(10,10)
+DEFAULT_FIGURE_DPI=500
+
 _logger = _logging.getLogger(f'{_APP_NAME}.dataset.plotting')
+_logger.debug(f'DEFAULT_FIGURE_SIZE= {DEFAULT_FIGURE_SIZE}')
+_logger.debug(f'DEFAULT_FIGURE_DPI= {DEFAULT_FIGURE_DPI}')
 
 class PlotTSNE(_DatasetProtocolFrame):
 	''' TSNE Plot. '''

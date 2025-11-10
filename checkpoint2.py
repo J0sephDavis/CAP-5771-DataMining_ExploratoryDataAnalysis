@@ -243,7 +243,7 @@ class ContentCollabFrame(DatasetCSV):
 		super().__init__(frame, file)
 
 	@classmethod
-	def from_filter(cls,data:pd.DataFrame, filepath:_Path = default_path)->'ContentCollabFrame':
+	def from_filter(cls,data:pd.DataFrame, filepath:Path = default_path)->'ContentCollabFrame':
 		''' data dataframe of USERNAME,ANIME_ID'''
 		sw = Stopwatch()
 		sw.start()

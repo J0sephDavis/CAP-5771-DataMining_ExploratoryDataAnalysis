@@ -233,18 +233,21 @@ class UserListFilter(_DatasetCSV):
 		''' Filters based on criteria. Aka the Post Filter. '''
 		_logger.debug('filter_rankings()')
 		frame = cleaned_rankings.get_frame().copy()
-		'''TODO
-		- [ ] Status
-			- Remove PTW
-			- Remove Currently watching & watched < 0.50?
-			- Removed dropped where they did not watch until a threashold?
-		- [ ] WATCHED_EPISODES
-			- Watched Episodes = 0, drop
+		''' Rules:
+		1. User must have marked show as completed (TODO, autodetect when # episodes == watched_episodes and fix this during cleaning)
+		2. Score > 0
 		'''
-		rm_plan_to_watch = frame.loc[frame[UserRankingColumn.STATUS]==StatusEnum.PLAN_TO_WATCH]
+		rm_incomplete = frame.loc[
+			frame[UserRankingColumn.STATUS]!=StatusEnum.COMPLETED
+		]
+		rm_invalid_score = frame.loc[
+			frame[UserRankingColumn.SCORE]<1
+		]
+
 		# Collate removed data & drop from frame.
 		removed = _pd.concat([
-			rm_plan_to_watch,
+			rm_incomplete,
+			rm_invalid_score
 		])
 		frame.drop(index=removed.index, inplace=True)
 		ULF = UserListFilter(frame=frame)

@@ -3,5 +3,6 @@ __all__ = [
 	'compression',
 	'plotting',
 	'files',
-    'exceptions'
+    'exceptions',
+	'stopwatch',
 ]

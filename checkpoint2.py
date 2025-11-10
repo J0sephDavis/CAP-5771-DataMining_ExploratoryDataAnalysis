@@ -170,24 +170,13 @@ def filter_rankings(cleaned_rankings:UserListClean)->Tuple[UserListFilter,UserLi
 	ULF = UserListFilter(frame=frame)
 	ULFO = UserListFilterOut(frame=frame)
 	return ULF, ULFO
-
-def run():
-	_logger.info('Begin.')
+import gc
+def _generate_datasets():
+	''' Load all the user rankings, you should only do this once. it takes a ton of memory. '''
 	sw = Stopwatch()
-	folders:List[str] = [
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_FILTER),
-		get_env_val_safe(EnvFields.DIR_RANKING_DATASETS)
-	]
-	for folder in folders:
-		_logger.info(f'try-create folder: {folder}')
-		Path(folder).mkdir(mode=0o775, parents=False, exist_ok=True)
-
-	SUBSET_NROWS:Final[int] = int(ranking_list_raw_len)
 	_logger.info('Fetch raw user_rankings and the clean anime_list')
 	sw.start()
-	user_rankings = UserRankingList(nrows=SUBSET_NROWS,usecols=ranking_list_columns_for_retrieval)
+	user_rankings = UserRankingList(nrows=None,usecols=ranking_list_columns_for_retrieval)
 	sw.end()
 	_logger.info(f'Loading user rankings took {str(sw)}')
 	sw.start()
@@ -208,29 +197,93 @@ def run():
 	)
 	sw.end()
 	_logger.info(f'Prefiltering(1) took: {str(sw)}')
+	
+	rank_raw_len = user_rankings.get_frame().shape[0]
+	del user_rankings
+	gc.collect()
 
 	_logger.info('Perform cleaning on prefiltered data...')
 	sw.start()
 	clean, cleanedOut = clean_rankings(ranking=pref)
 	sw.end()
 	_logger.info(f'Cleaning(2) took: {str(sw)}')
-
+	
+	rank_pref_len = pref.get_frame().shape[0]
+	pref.save()
+	del pref
+	gc.collect()
 	
 	_logger.info('Perform filtering on cleaned data...')
 	sw.start()
 	filtered, filteredOut = filter_rankings(cleaned_rankings=clean)
 	sw.end()
 	_logger.info(f'Filtering(3) took: {str(sw)}')
+	
+	rank_clean_len = clean.get_frame().shape[0]
+	clean.save()
+	del clean
+	gc.collect()
 
 	# Print differecnes
 	output:List[str] = [
 		'\nLengths of each list:',
-		f'0\tRaw Rankings: {user_rankings.get_frame().shape[0]}',
-		f'1\tPrefiltered: {pref.get_frame().shape[0]}',
-		f'2\tCleaned: {clean.get_frame().shape[0]}',
+		f'0\tRaw Rankings: {rank_raw_len}',
+		f'1\tPrefiltered: {rank_pref_len}',
+		f'2\tCleaned: {rank_clean_len}',
 		f'3\tFiltered: {filtered.get_frame().shape[0]}',
 	]
 	_logger.info('\n'.join(output))
+	filtered.save()
+	return filtered
+
+
+def run():
+	_logger.info('Begin.')
+	folders:List[str] = [
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_FILTER),
+		get_env_val_safe(EnvFields.DIR_RANKING_DATASETS)
+	]
+	for folder in folders:
+		_logger.info(f'try-create folder: {folder}')
+		Path(folder).mkdir(mode=0o775, parents=False, exist_ok=True)
+	files:List[str] = [
+		get_env_val_safe(EnvFields.CSV_RANKING_CLEAN),
+		get_env_val_safe(EnvFields.CSV_RANKING_FILTER),
+		get_env_val_safe(EnvFields.CSV_RANKINGS_PREFILTER),		
+	]
+	load_everything:bool = False
+	for file in files:
+		if not Path(file).exists():
+			load_everything = True
+			break
+	filter:UserListFilter
+	if load_everything:
+		filter = _generate_datasets()
+	else:
+		filter = UserListFilter(frame=None)
+	
+	frame = filter.get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID]].copy()
+	del filter
+	gc.collect()
+	cbc = Path('content-by-content.csv')
+	frame['value']=1
+	overlap_comparison = frame.pivot_table(
+		index=UserRankingColumn.USERNAME,
+		columns=UserRankingColumn.ANIME_ID,
+		values='value',
+		fill_value=0,
+	)
+	_logger.info(overlap_comparison.head())
+	overlap_comparison.to_csv(cbc)
 	# ---
+	# TODO:
+	# matrix of USERS x Anime
+	#	- row is a specific user
+	#	- Column is a specifc anime
+	# From this matrix
+	#	- 1. I believe there was a method of modeling in one of our research papers using SVD
+	#	- 2. Create a frequent pattern tree
 	_logger.info('End.')
 	return

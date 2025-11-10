@@ -236,6 +236,32 @@ def _generate_datasets():
 	filtered.save()
 	return filtered
 
+from dataset.dataset import DatasetCSV
+class ContentCollabFrame(DatasetCSV):
+	default_path:Final[Path] = Path('content-by-content.csv')
+	def __init__(self, frame: Optional[pd.DataFrame], file: Path = default_path) -> None:
+		super().__init__(frame, file)
+
+	@classmethod
+	def from_filter(cls,data:pd.DataFrame, filepath:_Path = default_path)->'ContentCollabFrame':
+		''' data dataframe of USERNAME,ANIME_ID'''
+		sw = Stopwatch()
+		sw.start()
+		data['value']=1
+		overlap_comparison = data.pivot_table(
+			index=UserRankingColumn.USERNAME,
+			columns=UserRankingColumn.ANIME_ID,
+			values='value',
+			fill_value=0,
+		)
+		sw.end()
+		_logger.info(f'Generating content collaboration frame took {str(sw)}')
+		sw.start()		
+		_logger.info(f'Saving the frame took {str(sw)}')
+		overlap_comparison.to_csv(filepath, index=False)
+		sw.end()
+		return cls(frame=overlap_comparison, file=filepath)
+
 
 def run():
 	_logger.info('Begin.')
@@ -267,16 +293,8 @@ def run():
 	frame = filter.get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID]].copy()
 	del filter
 	gc.collect()
-	cbc = Path('content-by-content.csv')
 	frame['value']=1
-	overlap_comparison = frame.pivot_table(
-		index=UserRankingColumn.USERNAME,
-		columns=UserRankingColumn.ANIME_ID,
-		values='value',
-		fill_value=0,
-	)
-	_logger.info(overlap_comparison.head())
-	overlap_comparison.to_csv(cbc)
+	cbf = ContentCollabFrame.from_filter(data=frame)
 	# ---
 	# TODO:
 	# matrix of USERS x Anime

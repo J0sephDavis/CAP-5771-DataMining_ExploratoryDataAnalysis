@@ -189,11 +189,16 @@ def run():
 	]].copy()
 	del filter
 	gc.collect()
+	_logger.info('RUN SVD ON ALGORITHM')
+	sw = Stopwatch()
 	sup_data = surprise.Dataset.load_from_df(reader=reader,df=prediction_frame)
 	alg = surprise.SVD()
+	sw.start()
 	cross_validation_results = surprise.model_selection.cross_validate(
 		algo=alg, data=sup_data, cv=5, verbose=False, n_jobs=-1
 	)
+	sw.end()
+	_logger.info(f'cross validation took {str(sw)}')
 	_logger.info('Cross-validation of SVD')
 	for key,value in cross_validation_results.items():
 		_logger.info(f'{key}\t{value}')

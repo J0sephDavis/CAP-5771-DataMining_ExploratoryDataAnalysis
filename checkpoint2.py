@@ -262,9 +262,7 @@ class ContentCollabFrame(DatasetCSV):
 		sw.end()
 		return cls(frame=overlap_comparison, file=filepath)
 
-
-def run():
-	_logger.info('Begin.')
+def make_folders():
 	folders:List[str] = [
 		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
 		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
@@ -274,28 +272,44 @@ def run():
 	for folder in folders:
 		_logger.info(f'try-create folder: {folder}')
 		Path(folder).mkdir(mode=0o775, parents=False, exist_ok=True)
+
+def get_filtered_data():
 	files:List[str] = [
 		get_env_val_safe(EnvFields.CSV_RANKING_CLEAN),
 		get_env_val_safe(EnvFields.CSV_RANKING_FILTER),
 		get_env_val_safe(EnvFields.CSV_RANKINGS_PREFILTER),		
 	]
-	load_everything:bool = False
+	prefilter_clean_filter_data:bool = False
 	for file in files:
 		if not Path(file).exists():
-			load_everything = True
+			prefilter_clean_filter_data = True
 			break
 	filter:UserListFilter
-	if load_everything:
+	if prefilter_clean_filter_data:
 		filter = _generate_datasets()
 	else:
 		filter = UserListFilter(frame=None)
+	return filter
+
+def run():
+	_logger.info('Begin.')
+	make_folders()
 	
-	frame = filter.get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID]].copy()
-	del filter
-	gc.collect()
-	frame['value']=1
-	cbf = ContentCollabFrame.from_filter(data=frame)
-	# ---
+	cbf:ContentCollabFrame
+	if not ContentCollabFrame.default_path.exists():
+		_logger.info('generating content collab frame')
+		frame = get_filtered_data().get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID]].copy()
+		gc.collect()
+		frame['value']=1
+		cbf = ContentCollabFrame.from_filter(data=frame)
+	else:
+		sw = Stopwatch()
+		_logger.info('loading content collab frame from file')
+		sw.start()
+		cbf = ContentCollabFrame(frame=None)
+		sw.end()
+		_logger.info(f'loading the cbf took {str(sw)}')
+
 	# TODO:
 	# matrix of USERS x Anime
 	#	- row is a specific user
@@ -303,5 +317,8 @@ def run():
 	# From this matrix
 	#	- 1. I believe there was a method of modeling in one of our research papers using SVD
 	#	- 2. Create a frequent pattern tree
+
+	# How to use the cbf?
+
 	_logger.info('End.')
 	return

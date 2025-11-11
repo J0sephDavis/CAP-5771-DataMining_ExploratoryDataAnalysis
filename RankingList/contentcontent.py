@@ -49,12 +49,11 @@ class ContentContentFrame(DatasetCSV):
 
 		sw = Stopwatch()
 		sw.start()
-		data['value']=1
 		overlap_comparison = data.pivot_table(
 			index=UserRankingColumn.USERNAME,
 			columns=UserRankingColumn.ANIME_ID,
-			values='value',
-			fill_value=0,
+			values=UserRankingColumn.SCORE,
+			fill_value=0, # Score is from 1-10, but default is 0 when unrated... Confused as t
 		)
 		sw.end()
 		_logger.info(f'Generating content collaboration frame took {str(sw)}')

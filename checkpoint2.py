@@ -213,7 +213,8 @@ def get_filtered_data():
 	return filter
 # cannot use scikit-surprise on the the barc pc....
 # from sklearn.decomposition import TruncatedSVD
-from scipy.sparse import linalg
+from scipy.sparse import linalg as sparse_linalg
+from numpy import linalg
 # from numpy import linalg
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -266,7 +267,7 @@ def run():
 		m = testdata.get_shape()[0]
 		max_k=min(n,m,15)-1 # Cannot allocate 532 GiB lol
 		_logger.debug(f'max_k = {max_k}')
-		u,sigma,vt=linalg.svds(testdata,k=max_k)
+		u,sigma,vt=sparse_linalg.svds(testdata,k=max_k)
 		
 		k = get_k(sigma,percentage)
 		_logger.info(f'k should be.. {k}')

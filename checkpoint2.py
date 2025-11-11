@@ -212,8 +212,9 @@ def run():
 		n=testdata.get_shape()[1]
 		sim_total=0.0
 		rat_sim_total=0.0
-		
+		_logger.debug(f'max_k = min(shape) = {testdata.get_shape()}')
 		max_k=min(*testdata.get_shape()) # we start with the maximum k so we can calculate the optimal k
+		_logger.debug(f'max_k = {max_k}')
 		u,sigma,vt=linalg.svds(testdata,k=max_k)
 		
 		k = get_k(sigma,percentage)

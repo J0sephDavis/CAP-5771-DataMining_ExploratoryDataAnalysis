@@ -161,56 +161,95 @@ def get_filtered_data():
 	else:
 		filter = UserListFilter(frame=None)
 	return filter
-import surprise
+# cannot use scikit-surprise on the the barc pc....
+from sklearn.decomposition import TruncatedSVD
+# from scipy.sparse import linalg
+from numpy import linalg
+import numpy as np
 def run():
 	_logger.info('Begin.')
 	make_folders()
 	filter = get_filtered_data()
-	# cbf:ContentContentFrame
-	# if not ContentContentFrame.default_path.exists():
-	# 	_logger.info('generating content collab frame')
-	# 	frame = get_filtered_data().get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID]].copy()
-	# 	gc.collect()
-	# 	frame['value']=1
-	# 	cbf = ContentContentFrame.from_filter(data=frame)
-	# else:
-	# 	sw = Stopwatch()
-	# 	_logger.info('loading content collab frame from file')
-	# 	sw.start()
-	# 	cbf = ContentContentFrame(frame=None)
-	# 	sw.end()
-	# 	_logger.info(f'loading the cbf took {str(sw)}')
 
-	reader = surprise.Reader(rating_scale=(1,10))
-	prediction_frame = filter.get_frame()[[
-		UserRankingColumn.USERNAME,
-		UserRankingColumn.ANIME_ID,
-		UserRankingColumn.SCORE
-	]].copy()
-	del filter
-	gc.collect()
-	_logger.info('RUN SVD ON ALGORITHM')
-	sw = Stopwatch()
-	sup_data = surprise.Dataset.load_from_df(reader=reader,df=prediction_frame)
-	alg = surprise.SVD()
-	sw.start()
-	cross_validation_results = surprise.model_selection.cross_validate(
-		algo=alg, data=sup_data, cv=5, verbose=False, n_jobs=-1
-	)
-	sw.end()
-	_logger.info(f'cross validation took {str(sw)}')
-	_logger.info('Cross-validation of SVD')
-	for key,value in cross_validation_results.items():
-		_logger.info(f'{key}\t{value}')
-	# TODO:
-	# matrix of USERS x Anime
-	#	- row is a specific user
-	#	- Column is a specifc anime
-	# From this matrix
-	#	- 1. I believe there was a method of modeling in one of our research papers using SVD
-	#	- 2. Create a frequent pattern tree
+	'''
+	# SVD: https://towardsdatascience.com/predict-ratings-with-svd-in-collaborative-filtering-recommendation-system-733aaa768b14/
+		1. transform data
+		2. calc sim
+		3. det k
+		4. conv original svd to k dim
+		5. validate by top-k recs
+	'''
+	# Dataset: Rows=User, Columns=Content, Cells=Ratings
+	cbf:ContentContentFrame
+	if not ContentContentFrame.default_path.exists():
+		_logger.info('generating content collab frame')
+		cbf = ContentContentFrame.from_filter(filter=None)
+	else:
+		sw = Stopwatch()
+		_logger.info('loading content collab frame from file')
+		sw.start()
+		cbf = ContentContentFrame(frame=None)
+		sw.end()
+		_logger.info(f'loading the cbf took {str(sw)}')
+		sw.start()
+		cbf.save()
+		sw.end()
+		_logger.info(f'saving the cbf took {str(sw)}')
 
-	# How to use the cbf?
-
+	def euclidean_simularity(a,b):
+		return 1.0/(1.0+linalg.norm(a-b))
+	def get_k(sigma,percentage):
+		''' The percenteage of the sum of squares of the first k singular values
+		to the sum of squares of the total singular values.
+		'''
+		sigma_sqr = sigma**2
+		sum_sigma_sqr=sum(sigma_sqr)
+		k_sum_sigma=0
+		k=0
+		for i in sigma:
+			k_sum_sigma+=i**2
+			k+=1
+			if k_sum_sigma>=sum_sigma_sqr*percentage:
+				return k
+	def svdEst(testdata:pd.DataFrame,user,simMeas,item,percentage):
+		n=testdata.shape[1]
+		sim_total=0.0
+		rat_sim_total=0.0
+		u,sigma,vt=linalg.svd(testdata, compute_uv=True)
+		k = get_k(sigma,percentage)
+		sigma_k = np.diag(sigma[:k])
+		formed_items=np.around(
+			np.dot(
+				np.dot(u[:,:k], sigma_k),
+				vt[:k,:]
+			),
+			decimals=3
+		)
+		for j in range(n):
+			user_rating = testdata.loc[[user,j],UserRankingColumn.SCORE].iloc[0]
+			if (user_rating == 0) or (j== item):
+				continue
+			similarity=simMeas(formed_items[item,:].T,formed_items[j,:].T)
+			sim_total+=similarity
+			rat_sim_total+=similarity*user_rating
+		if sim_total==0:
+			return 0
+		else:
+			return np.around(rat_sim_total/sim_total,decimals=3)
+	def recommend(testdata:pd.DataFrame, user, sim_meas, est_method, percentage=0.9):
+		unrated_items=np.nonzero(testdata[user,:]==0)[0].tolist()
+		item_scores=[]
+		if len(unrated_items)==0:
+			_logger.info('SVD: all items rated')
+			return item_scores
+		else:
+			_logger.info(f'svd: len(unrated_items): {len(unrated_items)}')
+		for item in unrated_items:
+			estimated_score = est_method(testdata,user,sim_meas,item,percentage)
+			item_scores.append((item,estimated_score))
+		item_scores=sorted(item_scores,key=lambda x:x[1], reverse=True)
+		return item_scores
+	result = recommend(cbf.get_frame(),0,sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
+	_logger.info(f'recommend result: {result}')
 	_logger.info('End.')
 	return

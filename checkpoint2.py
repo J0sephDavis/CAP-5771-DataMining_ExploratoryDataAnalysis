@@ -261,7 +261,7 @@ def run():
 			item_scores.append((item,estimated_score))
 		item_scores=sorted(item_scores,key=lambda x:x[1], reverse=True)
 		return item_scores
-	result = recommend(cbf.get_frame(),0,sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
+	result = recommend(cbf.get_frame(),user=cbf.get_frame()[UserRankingColumn.USERNAME].at[0],sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
 	_logger.info(f'recommend result: {result}')
 	_logger.info('End.')
 	return

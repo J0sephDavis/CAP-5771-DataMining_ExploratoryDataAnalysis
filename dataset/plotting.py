@@ -35,8 +35,8 @@ _logger.debug(f'DEFAULT_FIGURE_DPI= {DEFAULT_FIGURE_DPI}')
 class PlotTSNE(_DatasetProtocolFrame):
 	''' TSNE Plot. '''
 	@_abstractmethod
-	def plot_tsne_transform_data(self)->_pd.DataFrame:
-		''' This should return the dataframe prepared for the plotting task. '''
+	def plot_tsne_transform_data(self)->_Tuple[_pd.DataFrame, _pd.DataFrame]:
+		''' This should return the dataframe prepared for the plotting task. and another to be joined after '''
 		pass
 
 	def plot_tsne(self,
@@ -58,10 +58,12 @@ class PlotTSNE(_DatasetProtocolFrame):
 			max_iter=max_iter,
 			n_iter_without_progress=no_progress_iter
 		)
-		tsne_res = tsne.fit_transform(self.plot_tsne_transform_data())
+		tsne_data,aux_data = self.plot_tsne_transform_data()
+		tsne_res = tsne.fit_transform(tsne_data)
 
 		_logger.info('plot_tsne P:{} completed in {} sec'.format(perplexity, _time.time()-time_started))
-		return (_pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column]),
+		aux_data.join(_pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column]))
+		return (aux_data,
 			tsne_x_column, tsne_y_column
 		)
 	

@@ -233,7 +233,7 @@ def run():
 	'''
 	# Dataset: Rows=User, Columns=Content, Cells=Ratings
 	sw = Stopwatch()
-	filter.frame = filter.get_frame().sample(n=500000)
+	filter.frame = filter.get_frame().sample(n=100000)
 	cbf = UserContentScore(filter=filter)
 
 	def euclidean_simularity(a,b):

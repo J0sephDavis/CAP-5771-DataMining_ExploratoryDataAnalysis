@@ -32,8 +32,7 @@ from AnimeList.clean import AnimeListClean
 from AnimeList.dataset import AnimeListColumns
 import logging as _logging
 _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
-import surprise
-class ContentContentFrame(DatasetCSV):
+class UserContentScore(DatasetCSV):
 	''' A dataframe that just represents implicit relationships.'''
 
 	default_path:Final[Path] = Path('content-by-content.csv')
@@ -41,7 +40,7 @@ class ContentContentFrame(DatasetCSV):
 		super().__init__(frame, file)
 
 	@classmethod
-	def from_filter(cls,filter:Optional[UserListFilter], filepath:Path = default_path)->'ContentContentFrame':
+	def from_filter(cls,filter:Optional[UserListFilter], filepath:Path = default_path)->'UserContentScore':
 		''' data dataframe of USERNAME,ANIME_ID'''
 		if filter is None:
 			filter = UserListFilter(frame=None)

@@ -21,7 +21,7 @@ from RankingList.dataset import (
 	UserListFilter,
 )
 from RankingList.contentcontent import (
-	ContentContentFrame
+	UserContentScore
 )
 from AnimeList.clean import AnimeListClean
 from AnimeList.dataset import AnimeListColumns
@@ -180,15 +180,15 @@ def run():
 		5. validate by top-k recs
 	'''
 	# Dataset: Rows=User, Columns=Content, Cells=Ratings
-	cbf:ContentContentFrame
-	if not ContentContentFrame.default_path.exists():
+	cbf:UserContentScore
+	if not UserContentScore.default_path.exists():
 		_logger.info('generating content collab frame')
-		cbf = ContentContentFrame.from_filter(filter=None)
+		cbf = UserContentScore.from_filter(filter=None)
 	else:
 		sw = Stopwatch()
 		_logger.info('loading content collab frame from file')
 		sw.start()
-		cbf = ContentContentFrame(frame=None)
+		cbf = UserContentScore(frame=None)
 		sw.end()
 		_logger.info(f'loading the cbf took {str(sw)}')
 		sw.start()

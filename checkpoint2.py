@@ -94,8 +94,8 @@ def comparison_barchart(
 	figure,axes = plt.subplots(dpi=figure_dpi)
 	tdf = pd.DataFrame(
 		[
-			[removed,leftover]
-		],columns=[removed_name,leftover_name]
+			[leftover,removed]
+		],columns=[leftover_name,removed_name]
 	)
 	tdf.plot(ax=axes, kind='bar',stacked=True, rot=0, **matplot_kwargs)
 	axes.set_xlabel('')

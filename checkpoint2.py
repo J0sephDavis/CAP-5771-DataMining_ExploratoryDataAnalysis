@@ -68,7 +68,7 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 import matplotlib.pyplot as plt
 
-def comparison_barchart_by_type(
+def comparison_barchart(
 		filtered_frame:pd.DataFrame,
 		removed_frame:pd.DataFrame,
 		figure_dpi=DEFAULT_FIGURE_DPI,
@@ -77,23 +77,27 @@ def comparison_barchart_by_type(
 	""" Stacked barchart showing removed vs remaining records """
 	_logger.info('comparison_barchart_by_type')
 	matplot_kwargs.setdefault('figsize',DEFAULT_FIGURE_SIZE)
-	leftover = filtered_frame['type'].value_counts()
-	_logger.info(f'leftover:\n{leftover}')
-	leftover.name='Leftover'
 
-	removed = removed_frame['type'].value_counts()
-	removed.name='Removed'
+	leftover = filtered_frame.shape[0]
+	leftover_name='Leftover'
+	removed = removed_frame.shape[0]
+	removed_name = 'Removed'
 	_logger.info(f'removed:\n{removed}')
-	total_records = (leftover.sum() + removed.sum())
-	total_left = leftover.sum()
-	total_removed = removed.sum()
-	float_removed = total_removed / total_records
+	_logger.info(f'leftover:\n{leftover}')
+	
+	total_records = (leftover + removed)
+	float_removed = removed / total_records
 	_logger.info('total records: {}'.format(total_records))
-	_logger.info('total_left: {}'.format(total_left))
-	_logger.info('total_removed: {}'.format(total_removed))
+	_logger.info('total_left: {}'.format(leftover))
+	_logger.info('total_removed: {}'.format(removed))
 	_logger.info('float_removed: {}'.format(float_removed))
 	figure,axes = plt.subplots(dpi=figure_dpi)
-	tdf = pd.concat([leftover,removed],axis=1)
+	tdf = pd.DataFrame(
+		[
+			[removed],
+			[leftover]
+		],columns=[removed_name,leftover_name]
+	)
 	tdf.plot(ax=axes, kind='bar',stacked=True, rot=0, **matplot_kwargs)
 	axes.set_xlabel('')
 	return figure,axes
@@ -127,7 +131,7 @@ def _generate_datasets(plot_comparisons:bool=False):
 		sw.end()
 		_logger.info(f'Prefiltering(1) took: {str(sw)}')
 
-		fig,ax = comparison_barchart_by_type(filtered_frame=pref.get_frame(), removed_frame=prefo.get_frame())
+		fig,ax = comparison_barchart(filtered_frame=pref.get_frame(), removed_frame=prefo.get_frame())
 		fig.savefig(fig_dir.joinpath('00 prefilter removed.tiff'))
 		plt.close(fig=fig)
 		del user_rankings
@@ -147,7 +151,7 @@ def _generate_datasets(plot_comparisons:bool=False):
 		
 		_logger.info('saving prefilter data')
 		pref.save(index=False)
-		fig,ax = comparison_barchart_by_type(filtered_frame=clean.get_frame(), removed_frame=cleanedOut.get_frame())
+		fig,ax = comparison_barchart(filtered_frame=clean.get_frame(), removed_frame=cleanedOut.get_frame())
 		fig.savefig(fig_dir.joinpath('01 clean removed.tiff'))
 		plt.close(fig=fig)
 		del pref
@@ -167,7 +171,7 @@ def _generate_datasets(plot_comparisons:bool=False):
 		
 		_logger.info('saving clean data')
 		clean.save(index=False)
-		fig,ax = comparison_barchart_by_type(filtered_frame=filter.get_frame(), removed_frame=filteredOut.get_frame())
+		fig,ax = comparison_barchart(filtered_frame=filter.get_frame(), removed_frame=filteredOut.get_frame())
 		fig.savefig(fig_dir.joinpath('02 filter removed.tiff'))
 		plt.close(fig=fig)
 		del clean

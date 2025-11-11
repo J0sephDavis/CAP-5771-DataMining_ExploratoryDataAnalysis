@@ -218,8 +218,22 @@ from numpy import linalg
 # from numpy import linalg
 import numpy as np
 from scipy.sparse import csr_matrix
+import seaborn as sns
 def run():
 	_logger.info('Begin.')
+	anime_list = AnimeListClean()
+	result_data,x_col,y_col = anime_list.plot_tsne()
+	f,ax = plt.subplots()
+	sns.scatterplot(ax=ax,
+		x=x_col, y=y_col,
+		hue=y_col, style=AnimeListColumns.TYPE,
+		data=result_data, legend='auto',alpha=0.5,
+		palette=sns.color_palette("mako", as_cmap=True)
+	)
+	f.set_size_inches(10,10)
+	f.set_dpi(500)
+	f.savefig('TSNE OF GENRES p:{}.tiff'.format(48))
+	return
 	make_folders()
 	filter = get_filtered_data()
 

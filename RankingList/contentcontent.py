@@ -1,5 +1,6 @@
 from helpers.stopwatch import Stopwatch
 from dataset.dataset import DatasetCSV
+
 from helpers.context import (
 	get_env_val_safe,
 	EnvFields,
@@ -31,29 +32,28 @@ from RankingList.dataset import (
 from AnimeList.clean import AnimeListClean
 from AnimeList.dataset import AnimeListColumns
 import logging as _logging
+from scipy.sparse import csr_matrix
 _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
-class UserContentScore(DatasetCSV):
-	''' A dataframe that just represents implicit relationships.'''
-
+class UserContentScore():
+	''' A sparse matrix of user-content scores '''
+	matrix:csr_matrix
+	username_codes:pd.Categorical
+	item_codes:pd.Categorical
 	default_path:Final[Path] = Path('content-by-content.csv')
-	def __init__(self, frame: Optional[pd.DataFrame], file: Path = default_path) -> None:
-		super().__init__(frame, file)
-
-	@classmethod
-	def from_filter(cls,filter:Optional[UserListFilter], filepath:Path = default_path)->'UserContentScore':
-		''' data dataframe of USERNAME,ANIME_ID'''
-		if filter is None:
-			filter = UserListFilter(frame=None)
-		data = filter.get_frame()[[UserRankingColumn.USERNAME, UserRankingColumn.ANIME_ID, UserRankingColumn.SCORE]]
-
+	def __init__(self, filter:UserListFilter) -> None:
+		frame = filter.get_frame()
 		sw = Stopwatch()
+		self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
+		self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])
 		sw.start()
-		overlap_comparison = data.pivot_table(
-			index=UserRankingColumn.USERNAME,
-			columns=UserRankingColumn.ANIME_ID,
-			values=UserRankingColumn.SCORE,
-			fill_value=0, # Score is from 1-10, but default is 0 when unrated... Confused as t
+		self.matrix = csr_matrix(
+			(frame[UserRankingColumn.SCORE],
+				(self.username_codes.codes, self.item_codes.codes)
+			),
+			shape=(len(self.username_codes.categories), len(self.item_codes.codes))
 		)
 		sw.end()
-		_logger.info(f'Generating content collaboration frame took {str(sw)}')
-		return cls(frame=overlap_comparison, file=filepath)
+		_logger.info(f'Generating content collaboration matrix took {str(sw)}')
+
+	def get_matrix(self):
+		return self.matrix

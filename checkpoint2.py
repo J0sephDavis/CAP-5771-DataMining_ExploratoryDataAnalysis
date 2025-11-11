@@ -162,10 +162,11 @@ def get_filtered_data():
 		filter = UserListFilter(frame=None)
 	return filter
 # cannot use scikit-surprise on the the barc pc....
-from sklearn.decomposition import TruncatedSVD
-# from scipy.sparse import linalg
-from numpy import linalg
+# from sklearn.decomposition import TruncatedSVD
+from scipy.sparse import linalg
+# from numpy import linalg
 import numpy as np
+from scipy.sparse import csr_matrix
 def run():
 	_logger.info('Begin.')
 	make_folders()
@@ -182,21 +183,7 @@ def run():
 	'''
 	# Dataset: Rows=User, Columns=Content, Cells=Ratings
 	sw = Stopwatch()
-	cbf:UserContentScore
-	if not UserContentScore.default_path.exists():
-		_logger.info('generating content collab frame')
-		cbf = UserContentScore.from_filter(filter=None)
-		# Saving takes far longer than just generating it....
-		# sw.start()
-		# cbf.save(index=False)
-		# sw.end()
-		_logger.info(f'saving the cbf took {str(sw)}')
-	else:
-		_logger.info('loading content collab frame from file')
-		sw.start()
-		cbf = UserContentScore(frame=None)
-		sw.end()
-		_logger.info(f'loading the cbf took {str(sw)}')
+	cbf = UserContentScore(filter=filter)
 
 	def euclidean_simularity(a,b):
 		return 1.0/(1.0+linalg.norm(a-b))
@@ -220,13 +207,21 @@ def run():
 				_logger.debug(f'k_sum_sigma > sum_sigma_sqr *percentage ({k_sum_sigma}>{sum_sigma_sqr*percentage})')
 				return k
 	
-	def svdEst(testdata:pd.DataFrame,user,simMeas,item,percentage):
+	def svdEst(testdata:csr_matrix,user,simMeas,item,percentage):
 		_logger.debug(f'svdEst user:{user} item:{item} percentage:{percentage}')
-		n=testdata.shape[1]
+		n=testdata.get_shape()[1]
 		sim_total=0.0
 		rat_sim_total=0.0
-		u,sigma,vt=linalg.svd(testdata, compute_uv=True)
+		
+		max_k=min(*testdata.get_shape()) # we start with the maximum k so we can calculate the optimal k
+		u,sigma,vt=linalg.svds(testdata,k=max_k)
+		
 		k = get_k(sigma,percentage)
+		_logger.info(f'k should be.. {k}')
+		
+		if u is None or vt is None:
+			raise Exception('')
+		
 		sigma_k = np.diag(sigma[:k])
 		formed_items=np.around(
 			np.dot(
@@ -236,7 +231,7 @@ def run():
 			decimals=3
 		)
 		for j in range(n):
-			user_rating = testdata.loc[[user,j],UserRankingColumn.SCORE].iloc[0]
+			user_rating = testdata[user,j]
 			if (user_rating == 0) or (j== item):
 				continue
 			similarity=simMeas(formed_items[item,:].T,formed_items[j,:].T)
@@ -247,7 +242,7 @@ def run():
 		else:
 			return np.around(rat_sim_total/sim_total,decimals=3)
 	
-	def recommend(testdata:pd.DataFrame, user, sim_meas, est_method, percentage=0.9):
+	def recommend(testdata:csr_matrix, user, sim_meas, est_method, percentage=0.9):
 		_logger.debug('recommend')
 		unrated_items=np.nonzero(testdata[user,:]==0)[0].tolist()
 		item_scores=[]
@@ -260,8 +255,8 @@ def run():
 			estimated_score = est_method(testdata,user,sim_meas,item,percentage)
 			item_scores.append((item,estimated_score))
 		item_scores=sorted(item_scores,key=lambda x:x[1], reverse=True)
-		return item_scores
-	result = recommend(cbf.get_frame(),user=cbf.get_frame()[UserRankingColumn.USERNAME].at[0],sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
+		return item_scores	
+	result = recommend(cbf.get_matrix(),user=cbf.username_codes.codes[0],sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
 	_logger.info(f'recommend result: {result}')
 	_logger.info('End.')
 	return

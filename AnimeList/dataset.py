@@ -55,6 +55,7 @@ class AnimeListColumns(_StrEnum):
 	ENDING_THEME='ending_theme'
 
 default_columns_for_retrieval:_Final[_List[_Union[AnimeListColumns,str]]] = [
+	AnimeListColumns.TITLE,
 	AnimeListColumns.ANIME_ID,
 	AnimeListColumns.STATUS,
 	AnimeListColumns.TYPE,

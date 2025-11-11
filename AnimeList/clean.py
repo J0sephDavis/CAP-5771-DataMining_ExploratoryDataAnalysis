@@ -14,12 +14,13 @@ from typing import (
 	List as _List,
 	Union as _Union,
 )
+from dataset.plotting import PlotTSNE
 from .filter import AnimeListFiltered as _AnimeListFiltered
 from .dataset import AnimeListColumns as _AnimeListColumns
 import logging as _logging
 from helpers.context import APP_LOGGER_NAME as _APP_LOGGER_NAME
 _logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.AnimeList.clean')
-class AnimeListClean(_DatasetCSV):
+class AnimeListClean(_DatasetCSV, PlotTSNE):
 	''' The AnimeList that has been cleaned. '''
 	def __init__(self,
 			  	frame:_Optional[_pd.DataFrame]=None,
@@ -31,6 +32,35 @@ class AnimeListClean(_DatasetCSV):
 		if self.frame is None:
 			_logger.debug('attempting to load csv')
 			self.load(usecols=usecols)
+	def plot_tsne_transform_data(self) -> _Tuple[_pd.DataFrame,_pd.DataFrame]:
+		_logger.info('AnimeListClean.plot_tsne_transform_data')
+		select_columns:_List[str] = [
+			_AnimeListColumns.ANIME_ID,
+			_AnimeListColumns.TITLE,
+			_AnimeListColumns.GENRE,
+			_AnimeListColumns.TYPE,
+		];
+		frame = self.get_frame().copy()[select_columns]
+		genre_cols = frame['genre'].str.get_dummies(sep=',')
+		frame.drop(columns=['genre'],inplace=True)
+		frame = frame.join(genre_cols)
+
+		data = frame.drop(columns=[
+			_AnimeListColumns.TITLE,
+			_AnimeListColumns.ANIME_ID,
+			_AnimeListColumns.TYPE
+		]
+		).apply(_pd.Series.value_counts)
+		data = data.transpose()
+		nrows = frame.shape[0]
+		frame.drop(columns=data.loc[(data[1]<nrows*0.03) | (data[0]<nrows*0.03)].index, inplace=True)
+		cols = [
+			_AnimeListColumns.TITLE,
+			_AnimeListColumns.TYPE
+		]
+		partial_frame = frame.copy()[cols]
+		frame.drop(columns=cols,inplace=True)
+		return frame, partial_frame
 
 class AnimeListCleanOut(_DatasetCSV):
 	''' The AnimeList records that have been cleaned out. '''

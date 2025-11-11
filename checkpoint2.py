@@ -141,7 +141,7 @@ def _generate_datasets(plot_comparisons:bool=False):
 		pref = None #  bs value to satisfy typesetter.
 	
 	clean:UserListClean
-	if generate_clean:
+	if plot_comparisons or generate_clean:
 		_logger.info('Perform cleaning on prefiltered data...')
 		sw.start()
 		clean, cleanedOut = UserListClean.clean_rankings(ranking=pref)
@@ -161,7 +161,7 @@ def _generate_datasets(plot_comparisons:bool=False):
 		clean = None # bs value to satisfy typesetter
 	
 	filter:UserListFilter
-	if generate_filter:
+	if plot_comparisons or generate_filter:
 		_logger.info('Perform filtering on cleaned data...')
 		sw.start()
 		filter, filteredOut = UserListFilter.filter_rankings(cleaned_rankings=clean)

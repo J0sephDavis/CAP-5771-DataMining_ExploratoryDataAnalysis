@@ -200,20 +200,28 @@ def run():
 
 	def euclidean_simularity(a,b):
 		return 1.0/(1.0+linalg.norm(a-b))
+	
 	def get_k(sigma,percentage):
 		''' The percenteage of the sum of squares of the first k singular values
 		to the sum of squares of the total singular values.
 		'''
+		_logger.debug(f'get_k(sigma:{sigma} percentage:{percentage})')
 		sigma_sqr = sigma**2
+		_logger.debug(f'sigma_sqr:{sigma_sqr}')
 		sum_sigma_sqr=sum(sigma_sqr)
+		_logger.debug(f'sum_sigma_sqr:{sum_sigma_sqr}')
 		k_sum_sigma=0
 		k=0
 		for i in sigma:
 			k_sum_sigma+=i**2
 			k+=1
+			_logger.debug(f'k_sum_sigma,k: ({k_sum_sigma},{k})')
 			if k_sum_sigma>=sum_sigma_sqr*percentage:
+				_logger.debug(f'k_sum_sigma > sum_sigma_sqr *percentage ({k_sum_sigma}>{sum_sigma_sqr*percentage})')
 				return k
+	
 	def svdEst(testdata:pd.DataFrame,user,simMeas,item,percentage):
+		_logger.debug(f'svdEst user:{user} item:{item} percentage:{percentage}')
 		n=testdata.shape[1]
 		sim_total=0.0
 		rat_sim_total=0.0
@@ -238,7 +246,9 @@ def run():
 			return 0
 		else:
 			return np.around(rat_sim_total/sim_total,decimals=3)
+	
 	def recommend(testdata:pd.DataFrame, user, sim_meas, est_method, percentage=0.9):
+		_logger.debug('recommend')
 		unrated_items=np.nonzero(testdata[user,:]==0)[0].tolist()
 		item_scores=[]
 		if len(unrated_items)==0:

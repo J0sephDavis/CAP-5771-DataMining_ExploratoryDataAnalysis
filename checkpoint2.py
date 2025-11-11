@@ -233,6 +233,7 @@ def run():
 	'''
 	# Dataset: Rows=User, Columns=Content, Cells=Ratings
 	sw = Stopwatch()
+	filter.frame = filter.get_frame().sample(n=500000)
 	cbf = UserContentScore(filter=filter)
 
 	def euclidean_simularity(a,b):
@@ -263,7 +264,7 @@ def run():
 		sim_total=0.0
 		rat_sim_total=0.0
 		m = testdata.get_shape()[0]
-		max_k=min(*testdata.get_shape(),6)-1 # Cannot allocate 532 GiB lol
+		max_k=min(n,m,15)-1 # Cannot allocate 532 GiB lol
 		_logger.debug(f'max_k = {max_k}')
 		u,sigma,vt=linalg.svds(testdata,k=max_k)
 		

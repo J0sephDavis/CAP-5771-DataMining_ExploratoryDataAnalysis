@@ -56,8 +56,4 @@ class UserContentScore(DatasetCSV):
 		)
 		sw.end()
 		_logger.info(f'Generating content collaboration frame took {str(sw)}')
-		sw.start()		
-		overlap_comparison.to_csv(filepath, index=False)
-		sw.end()
-		_logger.info(f'Saving the frame took {str(sw)}')
 		return cls(frame=overlap_comparison, file=filepath)

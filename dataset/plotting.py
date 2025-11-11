@@ -32,6 +32,16 @@ _logger = _logging.getLogger(f'{_APP_NAME}.dataset.plotting')
 _logger.debug(f'DEFAULT_FIGURE_SIZE= {DEFAULT_FIGURE_SIZE}')
 _logger.debug(f'DEFAULT_FIGURE_DPI= {DEFAULT_FIGURE_DPI}')
 
+class PlotUMAP(_DatasetProtocolFrame):
+	''' umap plot '''
+	@_abstractmethod
+	def plot_umap_transform_data(self)->_Tuple[_pd.DataFrame, _pd.DataFrame]:
+		''' retusn the UMAp results and the data it should be joined with after'''
+		pass
+
+	def plot_umap(self):
+		pass
+
 class PlotTSNE(_DatasetProtocolFrame):
 	''' TSNE Plot. '''
 	@_abstractmethod

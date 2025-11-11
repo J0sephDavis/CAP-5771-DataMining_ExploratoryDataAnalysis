@@ -63,14 +63,51 @@ _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.CP2')
 		- STATUS
 '''
 import gc
-def _generate_datasets():
+from dataset.plotting import DEFAULT_FIGURE_DPI, DEFAULT_FIGURE_SIZE
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+import matplotlib.pyplot as plt
+
+def comparison_barchart_by_type(
+		filtered_frame:pd.DataFrame,
+		removed_frame:pd.DataFrame,
+		figure_dpi=DEFAULT_FIGURE_DPI,
+		**matplot_kwargs
+	)->Tuple[Figure, Axes]:
+	""" Stacked barchart showing removed vs remaining records """
+	_logger.info('comparison_barchart_by_type')
+	matplot_kwargs.setdefault('figsize',DEFAULT_FIGURE_SIZE)
+	leftover = filtered_frame['type'].value_counts()
+	_logger.info(f'leftover:\n{leftover}')
+	leftover.name='Leftover'
+
+	removed = removed_frame['type'].value_counts()
+	removed.name='Removed'
+	_logger.info(f'removed:\n{removed}')
+	total_records = (leftover.sum() + removed.sum())
+	total_left = leftover.sum()
+	total_removed = removed.sum()
+	float_removed = total_removed / total_records
+	_logger.info('total records: {}'.format(total_records))
+	_logger.info('total_left: {}'.format(total_left))
+	_logger.info('total_removed: {}'.format(total_removed))
+	_logger.info('float_removed: {}'.format(float_removed))
+	figure,axes = plt.subplots(dpi=figure_dpi)
+	tdf = pd.concat([leftover,removed],axis=1)
+	tdf.plot(ax=axes, kind='bar',stacked=True, rot=0, **matplot_kwargs)
+	axes.set_xlabel('')
+	return figure,axes
+
+def _generate_datasets(plot_comparisons:bool=False):
 	generate_prefilter:bool = not UserListPreFilter.default_path.exists()
 	generate_clean:bool = generate_prefilter or not UserListClean.default_path.exists()
 	generate_filter:bool = generate_clean or not UserListFilter.default_path.exists()
+	
+	fig_dir = Path(get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS))
 
 	sw = Stopwatch()
 	pref:UserListPreFilter
-	if generate_prefilter:
+	if plot_comparisons or generate_prefilter:
 		_logger.info('Fetch raw user_rankings and the clean anime_list')
 		sw.start()
 		user_rankings = UserRankingList(nrows=None,usecols=ranking_list_columns_for_retrieval)
@@ -89,6 +126,10 @@ def _generate_datasets():
 		)
 		sw.end()
 		_logger.info(f'Prefiltering(1) took: {str(sw)}')
+
+		fig,ax = comparison_barchart_by_type(filtered_frame=pref.get_frame(), removed_frame=prefo.get_frame())
+		fig.savefig(fig_dir.joinpath('00 prefilter removed.tiff'))
+		plt.close(fig=fig)
 		del user_rankings
 		gc.collect()
 	elif generate_clean:
@@ -106,6 +147,9 @@ def _generate_datasets():
 		
 		_logger.info('saving prefilter data')
 		pref.save(index=False)
+		fig,ax = comparison_barchart_by_type(filtered_frame=clean.get_frame(), removed_frame=cleanedOut.get_frame())
+		fig.savefig(fig_dir.joinpath('01 clean removed.tiff'))
+		plt.close(fig=fig)
 		del pref
 		gc.collect()
 	elif generate_filter:
@@ -123,6 +167,9 @@ def _generate_datasets():
 		
 		_logger.info('saving clean data')
 		clean.save(index=False)
+		fig,ax = comparison_barchart_by_type(filtered_frame=filter.get_frame(), removed_frame=filteredOut.get_frame())
+		fig.savefig(fig_dir.joinpath('02 filter removed.tiff'))
+		plt.close(fig=fig)
 		del clean
 		gc.collect()
 	else:

@@ -152,5 +152,5 @@ def get_env_val_safe(key:_Union[_StrEnum,str], default:_Optional[str]=None)->str
 		err = EnvExceptionMissingValue(f'Could not get env value with key: {key}')
 		_logger.error('get_env_val_safe:',exc_info=err)
 		raise err
-	_logger.info(f'get_env_val_safe->{val}')
+	_logger.debug(f'get_env_val_safe->{val}')
 	return val

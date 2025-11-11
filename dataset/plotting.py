@@ -62,8 +62,7 @@ class PlotTSNE(_DatasetProtocolFrame):
 		tsne_res = tsne.fit_transform(tsne_data)
 
 		_logger.info('plot_tsne P:{} completed in {} sec'.format(perplexity, _time.time()-time_started))
-		aux_data.join(_pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column]))
-		return (aux_data,
+		return (aux_data.join(_pd.DataFrame(tsne_res, columns=[tsne_x_column, tsne_y_column])),
 			tsne_x_column, tsne_y_column
 		)
 	

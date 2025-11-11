@@ -178,23 +178,25 @@ def run():
 		3. det k
 		4. conv original svd to k dim
 		5. validate by top-k recs
+	# See also: https://github.com/Chhaviroy/movie-recommendation-system-svd/blob/main/22_movierecommendationsystemusingsvd.py
 	'''
 	# Dataset: Rows=User, Columns=Content, Cells=Ratings
+	sw = Stopwatch()
 	cbf:UserContentScore
 	if not UserContentScore.default_path.exists():
 		_logger.info('generating content collab frame')
 		cbf = UserContentScore.from_filter(filter=None)
+		# Saving takes far longer than just generating it....
+		# sw.start()
+		# cbf.save(index=False)
+		# sw.end()
+		_logger.info(f'saving the cbf took {str(sw)}')
 	else:
-		sw = Stopwatch()
 		_logger.info('loading content collab frame from file')
 		sw.start()
 		cbf = UserContentScore(frame=None)
 		sw.end()
 		_logger.info(f'loading the cbf took {str(sw)}')
-		sw.start()
-		cbf.save()
-		sw.end()
-		_logger.info(f'saving the cbf took {str(sw)}')
 
 	def euclidean_simularity(a,b):
 		return 1.0/(1.0+linalg.norm(a-b))

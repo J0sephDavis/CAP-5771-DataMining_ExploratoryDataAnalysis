@@ -105,7 +105,7 @@ def _generate_datasets():
 		_logger.info(f'Cleaning(2) took: {str(sw)}')
 		
 		_logger.info('saving prefilter data')
-		pref.save()
+		pref.save(index=False)
 		del pref
 		gc.collect()
 	elif generate_filter:
@@ -122,14 +122,14 @@ def _generate_datasets():
 		_logger.info(f'Filtering(3) took: {str(sw)}')
 		
 		_logger.info('saving clean data')
-		clean.save()
+		clean.save(index=False)
 		del clean
 		gc.collect()
 	else:
 		filter = UserListFilter(frame=None)
 	
 	_logger.info('saving filter data')
-	filter.save()
+	filter.save(index=False)
 	return filter
 
 

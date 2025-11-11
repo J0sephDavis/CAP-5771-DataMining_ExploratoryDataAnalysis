@@ -41,7 +41,7 @@ class UserContentScore():
 	item_codes:pd.Categorical
 	default_path:Final[Path] = Path('content-by-content.csv')
 	def __init__(self, filter:UserListFilter) -> None:
-		frame = filter.get_frame()
+		frame = filter.get_frame()[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().copy()
 		sw = Stopwatch()
 		self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
 		self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])

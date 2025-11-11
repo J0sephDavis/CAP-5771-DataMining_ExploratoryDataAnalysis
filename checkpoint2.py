@@ -158,6 +158,8 @@ def get_filtered_data():
 	filter:UserListFilter
 	if prefilter_clean_filter_data:
 		filter = _generate_datasets()
+		_logger.info('saving filter data')
+		filter.save()
 	else:
 		filter = UserListFilter(frame=None)
 	return filter

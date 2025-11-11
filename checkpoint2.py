@@ -64,9 +64,9 @@ _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.CP2')
 '''
 import gc
 def _generate_datasets():
-	generate_prefilter:bool = UserListPreFilter.default_path.exists()
-	generate_clean:bool = generate_prefilter and UserListClean.default_path.exists()
-	generate_filter:bool = generate_clean and UserListFilter.default_path.exists()
+	generate_prefilter:bool = not UserListPreFilter.default_path.exists()
+	generate_clean:bool = generate_prefilter or not UserListClean.default_path.exists()
+	generate_filter:bool = generate_clean or not UserListFilter.default_path.exists()
 
 	sw = Stopwatch()
 	pref:UserListPreFilter
@@ -89,7 +89,6 @@ def _generate_datasets():
 		)
 		sw.end()
 		_logger.info(f'Prefiltering(1) took: {str(sw)}')
-		rank_raw_len = user_rankings.get_frame().shape[0]
 		del user_rankings
 		gc.collect()
 	elif generate_clean:
@@ -105,7 +104,7 @@ def _generate_datasets():
 		sw.end()
 		_logger.info(f'Cleaning(2) took: {str(sw)}')
 		
-		rank_pref_len = pref.get_frame().shape[0]
+		_logger.info('saving prefilter data')
 		pref.save()
 		del pref
 		gc.collect()
@@ -122,13 +121,14 @@ def _generate_datasets():
 		sw.end()
 		_logger.info(f'Filtering(3) took: {str(sw)}')
 		
-		rank_clean_len = clean.get_frame().shape[0]
+		_logger.info('saving clean data')
 		clean.save()
 		del clean
 		gc.collect()
 	else:
 		filter = UserListFilter(frame=None)
 	
+	_logger.info('saving filter data')
 	filter.save()
 	return filter
 
@@ -158,8 +158,6 @@ def get_filtered_data():
 	filter:UserListFilter
 	if prefilter_clean_filter_data:
 		filter = _generate_datasets()
-		_logger.info('saving filter data')
-		filter.save()
 	else:
 		filter = UserListFilter(frame=None)
 	return filter

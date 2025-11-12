@@ -31,6 +31,7 @@ DEFAULT_FIGURE_DPI=500
 _logger = _logging.getLogger(f'{_APP_NAME}.dataset.plotting')
 _logger.debug(f'DEFAULT_FIGURE_SIZE= {DEFAULT_FIGURE_SIZE}')
 _logger.debug(f'DEFAULT_FIGURE_DPI= {DEFAULT_FIGURE_DPI}')
+import umap
 
 class PlotUMAP(_DatasetProtocolFrame):
 	''' umap plot '''
@@ -39,8 +40,17 @@ class PlotUMAP(_DatasetProtocolFrame):
 		''' retusn the UMAp results and the data it should be joined with after'''
 		pass
 
-	def plot_umap(self):
-		pass
+	def plot_umap(self, **kwargs):
+		reducer = umap.UMAP(**kwargs)
+		data,aux = self.plot_umap_transform_data()
+		_logger.info('Plotting UMAP...')
+		umap_x_col:str = f'UMAP-X'
+		umap_y_col:str = f'UMAP-Y'
+		embedding = reducer.fit_transform(data)
+		return aux.join(_pd.DataFrame(
+				embedding,
+				columns=[umap_x_col,umap_y_col]
+			)),umap_x_col, umap_y_col
 
 class PlotTSNE(_DatasetProtocolFrame):
 	''' TSNE Plot. '''

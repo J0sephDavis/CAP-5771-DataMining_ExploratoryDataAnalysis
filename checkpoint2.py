@@ -101,7 +101,8 @@ def comparison_barchart(
 	axes.set_xlabel('')
 	return figure,axes
 
-def _generate_datasets(plot_comparisons:bool=False):
+def _generate_datasets(plot_comparisons:bool=False)->UserListFilter:
+	''' Just fetches & saves dependent data if we need it. Returns the filtered list. '''
 	generate_prefilter:bool = not UserListPreFilter.default_path.exists()
 	generate_clean:bool = generate_prefilter or not UserListClean.default_path.exists()
 	generate_filter:bool = generate_clean or not UserListFilter.default_path.exists()
@@ -182,19 +183,8 @@ def _generate_datasets(plot_comparisons:bool=False):
 	filter.save(index=False)
 	return filter
 
-
-def make_folders():
-	folders:List[str] = [
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
-		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_FILTER),
-		get_env_val_safe(EnvFields.DIR_RANKING_DATASETS)
-	]
-	for folder in folders:
-		_logger.info(f'try-create folder: {folder}')
-		Path(folder).mkdir(mode=0o775, parents=False, exist_ok=True)
-
 def get_filtered_data():
+	''' returns the filter dataset if it needs to be fetched. Might be redundant but I no longer care.'''
 	files:List[str] = [
 		get_env_val_safe(EnvFields.CSV_RANKING_CLEAN),
 		get_env_val_safe(EnvFields.CSV_RANKING_FILTER),
@@ -219,23 +209,74 @@ from numpy import linalg
 import numpy as np
 from scipy.sparse import csr_matrix
 import seaborn as sns
-def run():
-	_logger.info('Begin.')
-	# anime_list = AnimeListClean()
-	# result_data,x_col,y_col = anime_list.plot_tsne()
-	# f,ax = plt.subplots()
-	# sns.scatterplot(ax=ax,
-	# 	x=x_col, y=y_col,
-	# 	hue=y_col, style=AnimeListColumns.TYPE,
-	# 	data=result_data, legend='auto',alpha=0.5,
-	# 	palette=sns.color_palette("mako", as_cmap=True)
-	# )
-	# f.set_size_inches(10,10)
-	# f.set_dpi(500)
-	# f.savefig('TSNE OF GENRES p:{}.tiff'.format(48))
+
+def init_folders():
+	''' Call to create folders needed by this program. '''
+	folders:List[str] = [
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS),
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_CLEAN),
+		get_env_val_safe(EnvFields.DIR_FIGURES_RANKINGS_FILTER),
+		get_env_val_safe(EnvFields.DIR_RANKING_DATASETS)
+	]
+	for folder in folders:
+		_logger.info(f'try-create folder: {folder}')
+		Path(folder).mkdir(mode=0o775, parents=False, exist_ok=True)
 	return
-	make_folders()
+
+def do_animelist_umap():
+	''' Call to generate the UMAP of the anime list genres.
+	Professor asked for this during checkpoint 1'''
+	_logger.debug('do_animelist_umap')
+	anime_list = AnimeListClean()
+	result_data,x_col,y_col = anime_list.plot_umap(n_neighbors=48)
+	f,ax = plt.subplots()
+	sns.scatterplot(ax=ax,
+		x=x_col, y=y_col,
+		hue=y_col, style=AnimeListColumns.TYPE,
+		data=result_data, legend='auto',alpha=0.5,
+		palette=sns.color_palette("mako", as_cmap=True)
+	)
+	f.set_size_inches(10,10)
+	f.set_dpi(500)
+	f.savefig('AnimeList Genre UMAP neighbors:48.tiff')
+	pass
+
+def do_animelist_tsne():
+	''' Call to generate the TSNE of the aniem list genres. For comparison to UMAP results.'''
+	_logger.debug('do_animelist_tsne')
+	anime_list = AnimeListClean()
+	result_data,x_col,y_col = anime_list.plot_tsne()
+	f,ax = plt.subplots()
+	sns.scatterplot(ax=ax,
+		x=x_col, y=y_col,
+		hue=y_col, style=AnimeListColumns.TYPE,
+		data=result_data, legend='auto',alpha=0.5,
+		palette=sns.color_palette("mako", as_cmap=True)
+	)
+	f.set_size_inches(10,10)
+	f.set_dpi(500)
+	f.savefig('AnimeList Genre TSNE perplexity:48.tiff')
+	pass
+
+def do_svd():
 	filter = get_filtered_data()
+	_logger.debug('do_svd')
+	''' SVD:
+	1. Decompose matrix X into U S V^T
+		- U: Left Singular Vectors
+		- S: Sigma, Singular Values - A diagonal matrix
+		- V: Right Singular Vectors
+	'''
+	pass
+
+class SvdMethods():
+	@staticmethod
+	def similarity(a,b):
+		# TODO: Cosine Similarity
+		return 0
+	
+
+def run():
 
 	'''
 	# SVD: https://towardsdatascience.com/predict-ratings-with-svd-in-collaborative-filtering-recommendation-system-733aaa768b14/

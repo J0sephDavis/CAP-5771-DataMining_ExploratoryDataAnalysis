@@ -14,13 +14,13 @@ from typing import (
 	List as _List,
 	Union as _Union,
 )
-from dataset.plotting import PlotTSNE
+from dataset.plotting import PlotTSNE, PlotUMAP
 from .filter import AnimeListFiltered as _AnimeListFiltered
 from .dataset import AnimeListColumns as _AnimeListColumns
 import logging as _logging
 from helpers.context import APP_LOGGER_NAME as _APP_LOGGER_NAME
 _logger = _logging.getLogger(f'{_APP_LOGGER_NAME}.AnimeList.clean')
-class AnimeListClean(_DatasetCSV, PlotTSNE):
+class AnimeListClean(_DatasetCSV, PlotTSNE, PlotUMAP):
 	''' The AnimeList that has been cleaned. '''
 	def __init__(self,
 			  	frame:_Optional[_pd.DataFrame]=None,
@@ -32,6 +32,10 @@ class AnimeListClean(_DatasetCSV, PlotTSNE):
 		if self.frame is None:
 			_logger.debug('attempting to load csv')
 			self.load(usecols=usecols)
+	
+	def plot_umap_transform_data(self):
+		return self.plot_tsne_transform_data()
+	
 	def plot_tsne_transform_data(self) -> _Tuple[_pd.DataFrame,_pd.DataFrame]:
 		_logger.info('AnimeListClean.plot_tsne_transform_data')
 		select_columns:_List[str] = [

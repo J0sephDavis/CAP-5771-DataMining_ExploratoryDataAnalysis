@@ -259,6 +259,8 @@ def do_animelist_tsne():
 	pass
 
 def do_svd():
+	raise NotImplementedError('give up')
+	sw = Stopwatch()
 	filter = get_filtered_data()
 	_logger.debug('do_svd')
 	''' SVD:
@@ -267,17 +269,6 @@ def do_svd():
 		- S: Sigma, Singular Values - A diagonal matrix
 		- V: Right Singular Vectors
 	'''
-	pass
-
-class SvdMethods():
-	@staticmethod
-	def similarity(a,b):
-		# TODO: Cosine Similarity
-		return 0
-	
-
-def run():
-
 	'''
 	# SVD: https://towardsdatascience.com/predict-ratings-with-svd-in-collaborative-filtering-recommendation-system-733aaa768b14/
 		1. transform data
@@ -286,12 +277,11 @@ def run():
 		4. conv original svd to k dim
 		5. validate by top-k recs
 	# See also: https://github.com/Chhaviroy/movie-recommendation-system-svd/blob/main/22_movierecommendationsystemusingsvd.py
+	# See: https://blog.csdn.net/weixin_41988628/article/details/83217255
 	'''
-	# Dataset: Rows=User, Columns=Content, Cells=Ratings
-	sw = Stopwatch()
+
 	filter.frame = filter.get_frame().sample(n=100000)
 	cbf = UserContentScore(filter=filter)
-
 	def euclidean_simularity(a,b):
 		return 1.0/(1.0+linalg.norm(a-b))
 	
@@ -366,5 +356,62 @@ def run():
 		return item_scores	
 	result = recommend(cbf.get_matrix(),user=cbf.username_codes.codes[0],sim_meas=euclidean_simularity, est_method=svdEst, percentage=0.90)
 	_logger.info(f'recommend result: {result}')
-	_logger.info('End.')
 	return
+
+import networkx as nx
+import numpy as np
+from community import community_louvain,partition_at_level
+
+def _create_adjacency_matrix():
+	_logger.info('create_adjacency matrix?')
+	cleaned_data = UserListClean(frame=None)
+	df = cleaned_data.get_frame()
+	selected_columns = [
+		UserRankingColumn.USERNAME,
+		UserRankingColumn.ANIME_ID,
+	]
+	remove_cols = []
+	for col in df.columns:
+		if col not in selected_columns:
+			remove_cols.append(col)
+	df.drop(columns=remove_cols,inplace=True)
+	df.dropna(inplace=True,how='any')
+	
+	del cleaned_data
+	gc.collect()
+	_logger.debug('create factorize values')
+	user_id,user_uniques = pd.factorize(df[UserRankingColumn.USERNAME])
+	content_id,content_uniques = pd.factorize(df[UserRankingColumn.ANIME_ID])
+	_logger.debug('create sparse matrix')
+	x=csr_matrix(
+		(np.ones(len(user_id)),(user_id,content_id)), shape=(len(user_uniques),len(content_uniques))
+	)
+	_logger.info('generating content-content sparse matrix')
+	content_content = x.T @ x
+	_logger.info('creating graph')
+	G_c2c:nx.Graph = nx.from_scipy_sparse_array(content_content)
+	# graph_partitions = community_louvain.best_partition(G_c2c)
+	_logger.info('generating dendrogram')
+	dendrogram_dictionary = community_louvain.generate_dendrogram(graph=G_c2c)
+	_logger.debug('dendrogram_dictionary:')
+	_logger.debug(f'{dendrogram_dictionary}')
+	partition = partition_at_level(dendrogram_dictionary,level=0)
+	nx.draw_networkx(
+		G=G_c2c,
+		pos=nx.spring_layout(
+			G_c2c,
+			seed=42
+		),
+		node_color=[partition[n] for n in G_c2c.nodes],
+		node_size=100,
+		cmap = plt.cm.get_cmap('tab10'),
+		with_labels=False
+	)
+	plt.show()
+	
+	return
+def create_networks():
+	_logger.info('creating network graphs.')
+	matrix = _create_adjacency_matrix()
+	G = nx.Graph() # Undirected graph
+	pass

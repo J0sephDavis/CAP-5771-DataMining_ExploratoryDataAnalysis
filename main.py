@@ -42,7 +42,7 @@ try:
 
 	if control_flow.run_checkpoint_two:
 		import checkpoint2
-		checkpoint2.run()
+		checkpoint2.create_networks()
 		
 except Exception as e:
 	logger.error('Exception in main:',exc_info=e)

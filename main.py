@@ -28,6 +28,8 @@ from dataclasses import dataclass
 from typing import ClassVar
 from helpers.context import load_find_env
 load_find_env()
+import c1_animelist
+import checkpoint2
 
 
 class control_flow:
@@ -37,12 +39,10 @@ class control_flow:
 try:
 	logger.info(f'control flow: {vars(control_flow)}')
 	if control_flow.run_checkpoint_one:
-		import c1_animelist
 		c1_animelist.run()
 
 	if control_flow.run_checkpoint_two:
-		import checkpoint2
-		checkpoint2.create_networks()
+		checkpoint2.plot_figs()
 		
 except Exception as e:
 	logger.error('Exception in main:',exc_info=e)

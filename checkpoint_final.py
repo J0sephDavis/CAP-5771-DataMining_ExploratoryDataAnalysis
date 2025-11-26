@@ -20,7 +20,7 @@ import umap
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import Optional
+from typing import Optional,Tuple,List
 from pathlib import Path
 def run_umap(folder:Optional[Path],data:UserContentScore, n_neighbors:int, min_dist:float,metric:str):
 	umap_results = data.run_umap(n_neighbors=n_neighbors, min_dist=min_dist, metric=metric)
@@ -49,9 +49,16 @@ def main():
 	min_dists=[0,0.2,0.4,0.6,0.8,1.0]
 	neighbors=[2,4,8,16,32,64,128,256,512]
 	metrics=['cosine','minkowski','chebyshev','manhattan','euclidean']
+	could_not_complete:List[Tuple[Tuple,BaseException]] = []
 	for dist in min_dists:
 		for n in neighbors:
 			for metric in metrics:
 				_logger.info(f'starting umap with dist:{dist} n:{n} metric:{metric}')
-				run_umap(folder=folder,data=ucs, n_neighbors=n, min_dist=dist, metric=metric)
+				try:
+					run_umap(folder=folder,data=ucs, n_neighbors=n, min_dist=dist, metric=metric)
+				except BaseException as e:
+					_logger.error(f'Could not complete umap... Wait for report after we run the rest')
+					could_not_complete.append(((dist,n,metric),e))
+	for rec in could_not_complete:
+		_logger.error(f'dist:{rec[0][0]} neigh:{rec[0][1]} metrc:{rec[0][2]}.. Failed {str(rec[1])}',exc_info=rec)
 	# Attempt to make a user-user similarity measure by finding users with similar ratings.

@@ -30,11 +30,12 @@ from helpers.context import load_find_env
 load_find_env()
 import c1_animelist
 import checkpoint2
-
+import checkpoint_final
 
 class control_flow:
 	run_checkpoint_one:ClassVar[bool] = False
-	run_checkpoint_two:ClassVar[bool] = True
+	run_checkpoint_two:ClassVar[bool] = False
+	run_checkpoint_three:ClassVar[bool] = True
 
 try:
 	logger.info(f'control flow: {vars(control_flow)}')
@@ -44,6 +45,8 @@ try:
 	if control_flow.run_checkpoint_two:
 		checkpoint2.plot_figs()
 		
+	if control_flow.run_checkpoint_three:
+		checkpoint_final.main()
 except Exception as e:
 	logger.error('Exception in main:',exc_info=e)
 	logging.shutdown()

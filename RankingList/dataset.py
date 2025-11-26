@@ -225,11 +225,12 @@ class UserListFilter(_DatasetCSV):
 				frame:_Optional[_pd.DataFrame]=None,
 				path=default_path,
 				nrows:_Optional[int] = None,
+				cols:_Optional[_List]=None
 			  ) -> None:
 		super().__init__(frame, path)
 		_logger.debug(f'UserListFilter.__init__(frame:{frame}, path:{path})')
 		if self.frame is None:
-			self.load(nrows=nrows)
+			self.load(nrows=nrows,usecols=cols)
 	
 	@staticmethod
 	def filter_rankings(cleaned_rankings:UserListClean)->_Tuple['UserListFilter',UserListFilterOut]:

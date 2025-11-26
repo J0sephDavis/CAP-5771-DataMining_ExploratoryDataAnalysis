@@ -60,8 +60,8 @@ class UserContentScore():
 	def get_matrix(self):
 		return self.matrix
 	
-	def run_umap(self):
-		reducer = umap.UMAP()
+	def run_umap(self, **kwargs):
+		reducer = umap.UMAP(**kwargs)
 		data=self.get_matrix()
 		_logger.info('Plotting UMAP...')
 		embedding = reducer.fit_transform(data)

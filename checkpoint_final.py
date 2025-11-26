@@ -20,8 +20,9 @@ import umap
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-def run_umap(data:UserContentScore, n_neighbors:int=2):
-	umap_results = data.run_umap()
+from typing import Optional
+def run_umap(folder:Optional[Path],data:UserContentScore, n_neighbors:int=2, min_dist:float,metric:str):
+	umap_results = data.run_umap(n_neighbors=n_neighbors, min_dist=min_dist, metric=metric)
 	f,ax = plt.subplots()
 	sns.scatterplot(ax=ax,
 		x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
@@ -30,7 +31,11 @@ def run_umap(data:UserContentScore, n_neighbors:int=2):
 	)
 	f.set_size_inches(10,10)
 	f.set_dpi(500)
-	f.savefig(f'umap ucs {n_neighbors}_neighbors.tiff')
+	if folder is not None:
+		file = folder.joinpath(f'umap ucs {metric} {n_neighbors}_neighbors {min_dist}_dst.tiff')
+	else:
+		file=f'umap ucs {metric} {n_neighbors}_neighbors {min_dist}_dst.tiff'
+	f.savefig(file)
 	
 def main():
 	ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
@@ -38,7 +43,14 @@ def main():
 	ucs=UserContentScore(ulf)
 	del ulf
 	# Perform UMAP
+	from pathlib import Path
+	folder:Path = Path('final_umap')
+	folder.mkdir(mode=0o775, parents=False, exist_ok=True)
+	min_dists=[0,0.2,0.4,0.6,0.8,1.0]
 	neighbors=[2,4,8,16,32,64,128,256,512]
-	for n in neighbors:
-		run_umap(ucs, n_neighbors=n)
+	metrics=['cosine','minkowski','chebyshev','manhattan','euclidean']
+	for dist in min_dists:
+		for n in neighbors:
+			for metric in metrics:
+				run_umap(folder=folder,data=ucs, n_neighbors=n, min_dist=dist, metric=metric)
 	# Attempt to make a user-user similarity measure by finding users with similar ratings.

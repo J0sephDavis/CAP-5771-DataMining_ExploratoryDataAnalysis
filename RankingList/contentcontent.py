@@ -34,6 +34,8 @@ from AnimeList.dataset import AnimeListColumns
 import logging as _logging
 from scipy.sparse import csr_matrix
 _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
+import umap
+
 class UserContentScore():
 	''' A sparse matrix of user-content scores '''
 	matrix:csr_matrix
@@ -57,3 +59,10 @@ class UserContentScore():
 
 	def get_matrix(self):
 		return self.matrix
+	
+	def run_umap(self):
+		reducer = umap.UMAP()
+		data=self.get_matrix()
+		_logger.info('Plotting UMAP...')
+		embedding = reducer.fit_transform(data)
+		return embedding

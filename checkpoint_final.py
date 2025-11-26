@@ -20,13 +20,8 @@ import umap
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-def main():
-	ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
-	# Create Users-Content with score as value
-	ucs=UserContentScore(ulf)
-	del ulf
-	# Perform UMAP
-	umap_results = ucs.run_umap()
+def run_umap(data:UserContentScore, n_neighbors:int=2):
+	umap_results = data.run_umap()
 	f,ax = plt.subplots()
 	sns.scatterplot(ax=ax,
 		x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
@@ -35,5 +30,15 @@ def main():
 	)
 	f.set_size_inches(10,10)
 	f.set_dpi(500)
-	f.savefig('usercontent_umap_noargs.tiff')
+	f.savefig(f'umap ucs {n_neighbors}_neighbors.tiff')
+	
+def main():
+	ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
+	# Create Users-Content with score as value
+	ucs=UserContentScore(ulf)
+	del ulf
+	# Perform UMAP
+	neighbors=[2,4,8,16,32,64,128,256,512]
+	for n in neighbors:
+		run_umap(ucs, n_neighbors=n)
 	# Attempt to make a user-user similarity measure by finding users with similar ratings.

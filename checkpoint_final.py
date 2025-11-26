@@ -16,4 +16,4 @@ _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.CP2')
 from RankingList.dataset import UserListFilter, UserRankingColumn
 def main():
     ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME])
-    print(ulf.get_frame()[UserRankingColumn.USERNAME].unique())
+    _logger.info(ulf.get_frame()[UserRankingColumn.USERNAME].unique())

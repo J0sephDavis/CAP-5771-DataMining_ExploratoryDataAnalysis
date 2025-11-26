@@ -21,7 +21,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import Optional
-def run_umap(folder:Optional[Path],data:UserContentScore, n_neighbors:int=2, min_dist:float,metric:str):
+from pathlib import Path
+def run_umap(folder:Optional[Path],data:UserContentScore, n_neighbors:int, min_dist:float,metric:str):
 	umap_results = data.run_umap(n_neighbors=n_neighbors, min_dist=min_dist, metric=metric)
 	f,ax = plt.subplots()
 	sns.scatterplot(ax=ax,
@@ -43,7 +44,6 @@ def main():
 	ucs=UserContentScore(ulf)
 	del ulf
 	# Perform UMAP
-	from pathlib import Path
 	folder:Path = Path('final_umap')
 	folder.mkdir(mode=0o775, parents=False, exist_ok=True)
 	min_dists=[0,0.2,0.4,0.6,0.8,1.0]

@@ -12,7 +12,7 @@ from helpers.context import (
 	APP_LOGGER_NAME,
 )
 import logging as _logging
-_logger = _logging.getLogger(f'{APP_LOGGER_NAME}.CP2')
+_logger = _logging.getLogger(f'{APP_LOGGER_NAME}.Final')
 from RankingList.dataset import UserListFilter, UserRankingColumn
 from AnimeList.clean import AnimeListClean
 from RankingList.contentcontent import UserContentScore
@@ -52,5 +52,6 @@ def main():
 	for dist in min_dists:
 		for n in neighbors:
 			for metric in metrics:
+				_logger.info(f'starting umap with dist:{dist} n:{n} metric:{metric}')
 				run_umap(folder=folder,data=ucs, n_neighbors=n, min_dist=dist, metric=metric)
 	# Attempt to make a user-user similarity measure by finding users with similar ratings.

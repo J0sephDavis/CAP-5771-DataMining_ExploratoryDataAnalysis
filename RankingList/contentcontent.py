@@ -65,4 +65,4 @@ class UserContentScore():
 		data=self.get_matrix()
 		_logger.info('Plotting UMAP...')
 		embedding = reducer.fit_transform(data)
-		return embedding
+		return pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])

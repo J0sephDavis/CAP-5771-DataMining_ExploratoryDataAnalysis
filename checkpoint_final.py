@@ -29,8 +29,7 @@ def main():
 	umap_results = ucs.run_umap()
 	f,ax = plt.subplots()
 	sns.scatterplot(ax=ax,
-		x=0, y=1,
-		hue=1,
+		x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
 		data=umap_results, legend='auto',alpha=0.5,
 		palette=sns.color_palette("mako", as_cmap=True)
 	)

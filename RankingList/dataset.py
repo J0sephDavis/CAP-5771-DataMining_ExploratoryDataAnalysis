@@ -137,11 +137,12 @@ class UserListCleanOut(_DatasetCSV):
 				frame:_Optional[_pd.DataFrame]=None,
 				path=default_path,
 				nrows:_Optional[int] = None,
+				cols:_Optional[_List]=None
 			  ) -> None:
 		super().__init__(frame, path)
 		_logger.debug(f'UserListCleanOut.__init__(frame:{frame}, path:{path})')
 		if self.frame is None:
-			self.load(nrows=nrows)
+			self.load(nrows=nrows,usecols=cols)
 
 class UserListClean(_DatasetCSV):
 	''' The user list cleaned. '''
@@ -150,12 +151,13 @@ class UserListClean(_DatasetCSV):
 				frame:_Optional[_pd.DataFrame]=None,
 				path=default_path,
 				nrows:_Optional[int] = None,
+				cols:_Optional[_List]=None,
 				**load_kwargs
 			  ) -> None:
 		super().__init__(frame, path)
 		_logger.debug(f'UserListClean.__init__(frame:{frame}, path:{path})')
 		if self.frame is None:
-			self.load(nrows=nrows, **load_kwargs)
+			self.load(nrows=nrows, usecols=cols, **load_kwargs)
 	@staticmethod
 	def clean_rankings(ranking:_Optional[UserListPreFilter])->_Tuple['UserListClean', UserListCleanOut]:
 		if ranking is None:

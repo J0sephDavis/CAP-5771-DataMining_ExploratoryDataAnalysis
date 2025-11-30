@@ -1,4 +1,6 @@
+import matplotlib.pyplot as plt
 from helpers.stopwatch import Stopwatch
+import seaborn as sns
 from dataset.dataset import DatasetCSV
 
 from helpers.context import (
@@ -8,6 +10,7 @@ from helpers.context import (
 )
 from helpers.stopwatch import Stopwatch
 from pathlib import Path
+import pickle
 import pandas as pd
 from typing import (
 	Optional,
@@ -35,67 +38,137 @@ import logging as _logging
 from scipy.sparse import csr_matrix, save_npz, load_npz
 _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
 import umap
+import numpy as np
 
 class UserContentScore():
 	''' A sparse matrix of user-content scores '''
-	matrix:csr_matrix
-	username_codes:pd.Categorical
-	item_codes:pd.Categorical
-	binary:bool
+	data_matrix:csr_matrix
+	username_codes:pd.Series
+	item_codes:pd.Series
+
+	is_binary:bool
 	score_threshold:int
-	default_path:Final[Path] = Path('content-by-content.csv')
-	base_filename:Path
-	def __init__(self, filter:UserListFilter, binary:bool, score_threshold_gt:int) -> None:
-		self.binary = binary
+	frac:float # The fraction of the dataset loaded.
+	drop_below_threshold:bool
+	
+	folder:Path
+	name:str
+	file_dataset:Path
+	file_frame:Path
+
+	def get_name(self):
+		return f'UCS score_{self.score_threshold} frac_{self.frac} bin_{self.is_binary} drop_{self.drop_below_threshold}'
+
+	@staticmethod
+	def get_frame_sample(filter:UserListFilter, frac:float)->pd.DataFrame:
+		filter_frame = filter.get_frame()
+		og = filter_frame.shape
+		_logger.debug(f'get_frame_sample original shape: {og}')
+		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().sample(frac=frac,axis='index').copy()
+		new = filter_frame.shape
+		_logger.info(f'get_frame_sample reduced by {og[0]-new[0]} rows. Rows:{new[0]}')
+		return frame
+
+	def __init__(self, filter:UserListFilter, binary:bool,
+			  score_threshold_gt:int, drop_below_threshold:bool,
+			  frac:float, parent_folder:Path) -> None:
+		'''
+		parent_folder: the folder above the folder which will contains this data.
+			- e.g., parent_folder='foobar' we will store data in foobar/$NAME
+		
+		'''
+		# 0. save args
 		self.score_threshold = score_threshold_gt
-		self.base_filename = Path(f'UCS st_{self.score_threshold} {'binary' if self.binary else 'non-binary'}') # TYPO! should have been UCS
-		if self.base_filename.exists():
-			_logger.info('Loading UCS from file')
-			self.matrix = load_npz(self.base_filename)
+		self.drop_below_threshold = drop_below_threshold
+		self.frac = frac
+		self.is_binary = binary
+		# 1. mkdir RUN_ID
+		self.name = self.get_name()
+		self.folder = parent_folder.joinpath(self.name)
+		self.folder.mkdir(mode=0o775, exist_ok=True,parents=True)
+		self.file_dataset = self.folder.joinpath('dataset.npz')
+		self.file_frame = self.folder.joinpath('frame.csv')
+		# 2. if Dataset.npz exists, load & stop.
+		if self.file_dataset.exists():
+			_logger.info(f'Loading {self.file_dataset}')
+			self.data_matrix = load_npz(self.file_dataset)
+		# 3. else process data and save.
 		else:
-			filter_frame = filter.get_frame()
-			_logger.info(f'oriinal filter frame shape: {filter_frame.shape}')
-			frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().sample(frac=0.1,axis='index').copy()
-			_logger.info(f'Binary? {binary}, score_filter={score_threshold_gt}')
+			frame = UserContentScore.get_frame_sample(filter, self.frac)
 			series_above_fiter = (frame[UserRankingColumn.SCORE] > score_threshold_gt)
-			if binary: # Make the values true & false
-				frame['TEMP_BINARY'] = False
-				frame.loc[series_above_fiter, ['TEMP_BINARY']] = True
+			if self.is_binary:
+				_logger.debug('binary data')
+				frame['TEMP_BINARY'] = 0
+				frame.loc[series_above_fiter, ['TEMP_BINARY']] = 1
 				frame.drop(columns=[UserRankingColumn.SCORE], inplace=True)
 				frame.rename(columns={'TEMP_BINARY':UserRankingColumn.SCORE},inplace=True)
-				_logger.info(frame.info())
 			else: # Set all values not meeting threshold to 0 & then subtract values that did by the threshold.
+				_logger.debug('non-binary data')
 				frame.loc[~series_above_fiter, [UserRankingColumn.SCORE]]=0 # Values which did not reach threshold are 0.
 				frame.loc[series_above_fiter,[UserRankingColumn.SCORE]]-=score_threshold_gt # Shift values
-				
-			_logger.info(f'after sampling frame shape: {frame.shape}')
+			if self.drop_below_threshold:
+				_logger.debug('drop below theshold')
+				frame.drop(index=frame.loc[~series_above_fiter].index, inplace=True)
+			_logger.debug(f'shape after processing: {frame.shape}')
+
+			self.username_codes = pd.Series(pd.Categorical(frame[UserRankingColumn.USERNAME]))
+			self.item_codes = pd.Series(pd.Categorical(frame[UserRankingColumn.ANIME_ID]))
+			self.username_codes.to_csv(self.folder.joinpath('username_codes.csv'))
+			self.item_codes.to_csv(self.folder.joinpath('item_codes.csv'))
+
 			sw = Stopwatch()
-			self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
-			self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])
 			sw.start()
-			self.matrix = csr_matrix(
+			self.data_matrix = csr_matrix(
 				(frame[UserRankingColumn.SCORE],
 					(self.username_codes.codes, self.item_codes.codes)
 				),
 				shape=(len(self.username_codes.categories), len(self.item_codes.codes))
 			)
 			sw.end()
-			_logger.info(f'Generating content collaboration matrix took {str(sw)}')
+			_logger.info(f'Generating {self.name} matrix took: {str(sw)}')
 			self.save_matrix_data()
-			frame.to_csv(f'{self.base_filename}.csv',index_label='INDEX')
+			frame.to_csv(self.file_frame,index_label='INDEX')
 
 	def get_matrix(self):
-		return self.matrix
+		return self.data_matrix
 	
 	def save_matrix_data(self):
-		save_npz(file=f'{self.base_filename}.npz', matrix=self.get_matrix())
-		self.username_codes
+		save_npz(file=self.file_dataset, matrix=self.get_matrix())
 	
-	def run_umap(self, label:str, **kwargs):
-		reducer = umap.UMAP(**kwargs)
-		data=self.get_matrix()
-		_logger.info('Plotting UMAP...')
-		embedding = reducer.fit_transform(data)
-		umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
-		umap_data.to_csv(f'{self.base_filename}_{label}_umap.csv')
-		return umap_data
+	def run_umap(self, n_neighbors:int, min_dist:float,metric:str):
+		''' Generate and plot umap data (if it doesnt exist already)'''
+		label:str = f'm_{metric} n_{n_neighbors} d_{min_dist}'
+		file_data = self.folder.joinpath(f'umap {label}.csv')
+		file_plot = self.folder.joinpath(f'umap {label}.tiff')
+		new_data:bool=False # Used to regenerate graph if it existed but the data had to be redone.
+		
+		if file_data.exists():
+			_logger.info(f'loading umap data from: {file_data}')
+			umap_data = pd.read_csv(file_data)
+		else:
+			new_data=True
+			_logger.info(f'Plotting UMAP {label}')
+			reducer = umap.UMAP(
+				n_neighbors=n_neighbors,
+				min_dist=min_dist,
+				metric=metric
+			)
+			embedding = reducer.fit_transform(self.get_matrix())
+			umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
+			umap_data.to_csv(index=False)
+		
+		if (not file_plot.exists()) or new_data:
+			_logger.info('plotting umap')
+			f,ax = plt.subplots()
+			sns.scatterplot(ax=ax,
+				x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
+				data=umap_data, legend='auto',alpha=0.5,
+				palette=sns.color_palette("mako", as_cmap=True)
+			)
+			f.set_size_inches(10,10)
+			f.set_dpi(500)
+			f.savefig(file_plot)
+			plt.close(fig=f)
+		else:
+			_logger.info('skipping. no need to plot.')
+		return

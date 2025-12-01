@@ -66,7 +66,7 @@ class UserContentScore():
 		og = filter_frame.shape
 		_logger.debug(f'get_frame_sample original shape: {og}')
 		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().sample(frac=frac,axis='index').copy()
-		new = filter_frame.shape
+		new = frame.shape
 		_logger.info(f'get_frame_sample reduced by {og[0]-new[0]} rows. Rows:{new[0]}')
 		return frame
 

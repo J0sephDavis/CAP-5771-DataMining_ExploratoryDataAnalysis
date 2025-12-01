@@ -80,24 +80,16 @@ def main():
 
 	folder.mkdir(mode=0o775, exist_ok=True, parents=True)
 
-	neighbors = [16,32,256,1024]
+	neighbors = [1024]
 	frac_data = 0.1
-	thresh = 5
-	_logger.info('perform binary analysis')
-	if mass_analysis( # BINARY no-drop @5
-			score_threshold=thresh, frac=frac_data,
-			drop_below_threshold=False, root_folder=folder,
-			binary=True,
-			neighbors=neighbors,
-			metrics=['hamming','jaccard','yule','kulsinski'],
-			dist=[None]):
-		return
-	_logger.info('perform non-binary analysis')
-	if mass_analysis( # NON-BINARY no-drop @5
-			score_threshold=thresh, frac=frac_data,
-			drop_below_threshold=False, root_folder=folder,
-			binary=False,
-			neighbors=neighbors,
-			metrics=['cosine','chebyshev','manhattan','euclidean'],
-			dist=[None]):
-		return
+	for t in [7,8,9,5]:
+		_logger.info('perform binary analysis')
+		if mass_analysis( # BINARY no-drop @5
+				score_threshold=t, frac=frac_data,
+				drop_below_threshold=True,
+				root_folder=folder,
+				binary=False,
+				neighbors=neighbors,
+				metrics=['cosine'],
+				dist=[None]):
+			return

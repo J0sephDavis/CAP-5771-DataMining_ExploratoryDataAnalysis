@@ -39,6 +39,7 @@ from scipy.sparse import csr_matrix, save_npz, load_npz
 _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
 import umap
 import numpy as np
+import pickle
 
 class UserContentScore():
 	''' A sparse matrix of user-content scores '''
@@ -92,6 +93,7 @@ class UserContentScore():
 		if self.file_dataset.exists():
 			_logger.info(f'Loading {self.file_dataset}')
 			self.data_matrix = load_npz(self.file_dataset)
+			_logger.warning('did not load username/item codes.. sorry')
 		# 3. else process data and save.
 		else:
 			frame = UserContentScore.get_frame_sample(filter, self.frac)
@@ -111,16 +113,28 @@ class UserContentScore():
 				frame.drop(index=frame.loc[~series_above_fiter].index, inplace=True)
 			_logger.debug(f'shape after processing: {frame.shape}')
 
-			self.username_codes = pd.Series(pd.Categorical(frame[UserRankingColumn.USERNAME]))
-			self.item_codes = pd.Series(pd.Categorical(frame[UserRankingColumn.ANIME_ID]))
-			self.username_codes.to_csv(self.folder.joinpath('username_codes.csv'))
-			self.item_codes.to_csv(self.folder.joinpath('item_codes.csv'))
-
+			self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
+			file_username_codes = self.folder.joinpath('username_codes.csv')
+			file_username_codes.unlink(missing_ok=True)
+			with open(file_username_codes,'wb') as f:
+				pickle.dump(self.username_codes,f)
+			
+			self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])
+			file_anime_codes = self.folder.joinpath('item_codes.csv')
+			file_anime_codes.unlink(missing_ok=True)
+			with open(file_anime_codes,'wb') as f:
+				pickle.dump(self.item_codes, f)
+			
+			frame[UserRankingColumn.ANIME_ID + '_code'] = self.item_codes.codes
+			frame[UserRankingColumn.USERNAME + '_code'] = self.username_codes.codes
 			sw = Stopwatch()
 			sw.start()
 			self.data_matrix = csr_matrix(
-				(frame[UserRankingColumn.SCORE],
-					(self.username_codes.codes, self.item_codes.codes)
+				(frame[UserRankingColumn.SCORE], # A 1-D array of values
+					(
+						self.username_codes.codes, # Same length as the score col. Indicates what row the value belongs to. ROW/indices
+		  				self.item_codes.codes		# same len as score col. indicates what col the value belongs to.		COL/indptr
+					)
 				),
 				shape=(len(self.username_codes.categories), len(self.item_codes.codes))
 			)

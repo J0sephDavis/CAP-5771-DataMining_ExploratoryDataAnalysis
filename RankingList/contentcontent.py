@@ -89,11 +89,16 @@ class UserContentScore():
 		self.folder.mkdir(mode=0o775, exist_ok=True,parents=True)
 		self.file_dataset = self.folder.joinpath('dataset.npz')
 		self.file_frame = self.folder.joinpath('frame.csv')
+		file_anime_codes = self.folder.joinpath('item_codes.csv')
+		file_username_codes = self.folder.joinpath('username_codes.csv')
 		# 2. if Dataset.npz exists, load & stop.
 		if self.file_dataset.exists():
 			_logger.info(f'Loading {self.file_dataset}')
 			self.data_matrix = load_npz(self.file_dataset)
-			_logger.warning('did not load username/item codes.. sorry')
+			with open(file_username_codes,'rb') as f:
+				self.username_codes = pickle.load(f)
+			with open(file_anime_codes,'rb') as f:
+				self.item_codes = pickle.load(f)
 		# 3. else process data and save.
 		else:
 			frame = UserContentScore.get_frame_sample(filter, self.frac)
@@ -114,13 +119,11 @@ class UserContentScore():
 			_logger.debug(f'shape after processing: {frame.shape}')
 
 			self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
-			file_username_codes = self.folder.joinpath('username_codes.csv')
 			file_username_codes.unlink(missing_ok=True)
 			with open(file_username_codes,'wb') as f:
 				pickle.dump(self.username_codes,f)
 			
 			self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])
-			file_anime_codes = self.folder.joinpath('item_codes.csv')
 			file_anime_codes.unlink(missing_ok=True)
 			with open(file_anime_codes,'wb') as f:
 				pickle.dump(self.item_codes, f)

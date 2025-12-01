@@ -169,7 +169,7 @@ class UserContentScore():
 			)
 			embedding = reducer.fit_transform(self.get_matrix())
 			umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
-			umap_data.to_csv(index=False)
+			umap_data.to_csv(file_data,index=False)
 		
 		if (not file_plot.exists()) or new_data:
 			_logger.info('plotting umap')

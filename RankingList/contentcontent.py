@@ -44,8 +44,8 @@ import pickle
 class UserContentScore():
 	''' A sparse matrix of user-content scores '''
 	data_matrix:csr_matrix
-	username_codes:pd.Series
-	item_codes:pd.Series
+	username_codes:pd.Categorical
+	item_codes:pd.Categorical
 
 	is_binary:bool
 	score_threshold:int
@@ -136,7 +136,7 @@ class UserContentScore():
 		  				self.item_codes.codes		# same len as score col. indicates what col the value belongs to.		COL/indptr
 					)
 				),
-				shape=(len(self.username_codes.categories), len(self.item_codes.codes))
+				shape=(len(self.username_codes.categories), len(self.item_codes.categories))
 			)
 			sw.end()
 			_logger.info(f'Generating {self.name} matrix took: {str(sw)}')

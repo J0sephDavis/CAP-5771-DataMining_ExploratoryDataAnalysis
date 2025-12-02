@@ -5,8 +5,33 @@ import numpy as np
 from scipy.sparse import csr_matrix, save_npz, load_npz
 from pathlib import Path
 
-folder:Path = Path('/home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/UCS score_7 frac_0.03 bin_False drop_True')
-file_umap_result = folder.joinpath('umap m_cosine n_1024 d_0.0.csv')
+import seaborn as sns
+import matplotlib.pyplot as plt
+folder:Path = Path(
+	'/home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/__UCS score_9 frac_0.1 bin_True drop_True'
+)
+name:str = 'umap m_jaccard n_1024 d_0.0'
+
+def plot_umap(file_plot:Path, data:pd.DataFrame,alpha:float, major_freq:int=20, minor_freq:int=40):
+	# file_plot = folder.joinpath(f'{name}.tiff')
+	f,ax = plt.subplots()
+	sns.scatterplot(ax=ax,
+		x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
+		data=data, legend='auto',alpha=alpha,
+		palette=sns.color_palette("mako", as_cmap=True)
+	)
+	from matplotlib import ticker
+	ax.xaxis.set_major_locator(locator=ticker.MaxNLocator(major_freq))
+	ax.yaxis.set_major_locator(locator=ticker.MaxNLocator(major_freq))
+	# ax.xaxis.set_minor_locator(locator=ticker.MaxNLocator(minor_freq))
+	# ax.yaxis.set_minor_locator(locator=ticker.MaxNLocator(minor_freq))
+	ax.grid(visible=True, which='major',axis='both')
+	f.set_size_inches(10,10)
+	f.set_dpi(500)
+	f.savefig(file_plot)
+	plt.close(fig=f)
+
+file_umap_result = folder.joinpath(f'{name}.csv')
 file_frame_subset = folder.joinpath('frame.csv')
 file_csr_matrix=folder.joinpath('dataset.npz')
 file_anime_list = Path('/home/joseph/Desktop/BARC1447_SHARED/AnimeList.csv')

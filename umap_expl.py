@@ -58,39 +58,120 @@ if (_mshape[0] != cat_user.categories.shape[0]) or (_mshape[1] != cat_anime.cate
 
 print('loading umap data')
 umap_data = pd.read_csv(file_umap_result)
-alpha_umap = umap_data.loc[
-		(umap_data['UMAP-X'] > 30)	& (umap_data['UMAP-X'] < 40)
-	&   (umap_data['UMAP-Y'] < -15)	& (umap_data['UMAP-Y'] > -20)
-]
-# alpha_dense = pd.DataFrame(matrix[umap_data.index].todense()).join(other=umap_data)
-csr_alpha = matrix[umap_data.index]
-print(f'selected {csr_alpha.shape[0]} rows from the csr')
-alpha_rows, alpha_cols = csr_alpha.nonzero()
-print('column frequency calculated')
-alpha_col_freq = Counter(alpha_cols)
-pass
-print('preparing cluster dataset')
-alpha_cluster = pd.DataFrame(data= {
-		'code':list(alpha_col_freq.keys()),
-		'freq':list(alpha_col_freq.values())
-	}
-)
-alpha_cluster['anime_id'] = alpha_cluster['code'].map(lambda x: cat_anime[x])
-alpha_cluster['percent'] = alpha_cluster['freq']/alpha_cluster.shape[0]
-# Merge anime information for analysis
+file_umap_no_na:Path = folder.joinpath(f'{name}_FILLED_NA.csv')
+if not file_umap_no_na.exists():
+	umap_data.fillna(value=99999).to_csv(folder.joinpath(f'FILLED NA {name}.csv'), index=False)
+
 print('loading anime dataset')
 anime_lit = pd.read_csv(file_anime_list, usecols=['anime_id','title','score','rank'])
-alpha_cluster= alpha_cluster.merge(right=anime_lit, left_on='anime_id', right_on='anime_id', how='left')
-# # Merge UMAP data (IMPOSSIBLE! Becuse UMAP is by user not anime.)
-# if alpha_cluster.shape[0] != alpha_umap.shape[0]:
-# 	print('alpha:',alpha_cluster.shape)
-# 	print('umap:',alpha_umap.shape)
-# 	raise Exception('alpha subset not the same len as umap data?')
-# alpha_cluster = alpha_cluster.merge(right=alpha_umap, left_index=True, right_index=True)
-# save
-print('saving cluster dataset')
-file_alpha = folder.joinpath('alpha_cluster.csv') # First cluster
-alpha_cluster.to_csv(file_alpha,index=False)
-# Translate the column id to anime_id
 
-# Translate the row id to uernames
+
+def process_cluster(umap_data:pd.DataFrame, matrix:csr_matrix, label:str, alpha:float=0.5):
+	print('process_cluster: ', label)
+	''' matrix: entire csr
+		umap: subset of data.
+	'''
+	file_cluster_umap = folder.joinpath(f'{name}_{label}_cluster.csv') # First cluster
+	if not file_cluster_umap.exists():
+		c_matrix = matrix[umap_data.index]
+		print(f'selected {c_matrix.shape[0]} rows from the csr')
+		c_rows, c_cols = c_matrix.nonzero()
+		print('calculating col freq')
+		c_col_freq = Counter(c_cols)
+		pass
+		print('preparing cluster dataset')
+		c_frame = pd.DataFrame(data= {
+				'code':list(c_col_freq.keys()),
+				'freq':list(c_col_freq.values())
+			}
+		)
+		c_frame['anime_id'] = c_frame['code'].map(lambda x: cat_anime[x])
+		c_frame['percent'] = c_frame['freq']/c_matrix.shape[0] # Frequency / users
+		c_frame= c_frame.merge(right=anime_lit, left_on='anime_id', right_on='anime_id', how='left')
+		pass
+		print('saving cluster dataset')
+		c_frame.to_csv(file_cluster_umap,index=False)
+		pass
+
+	file_plot = folder.joinpath(f'{name}_{label}_cluster.tiff')
+	if not file_plot.exists():
+		print('plotting cluster')
+		plot_umap(file_plot=file_plot, data=umap_data, alpha=alpha)
+
+# UCS st 9 f 0.1 bin true drop true folder:'/home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/__UCS score_9 frac_0.1 bin_True drop_True'  name:'umap m_jaccard n_1024 d_0.0'
+all_alp=0.05
+file_umap_grid_plot = folder.joinpath(f'{name}_WITH_GRID_a{all_alp}.tiff')
+if not file_umap_grid_plot.exists():
+	print('replotting umap data with grid')
+	plot_umap(file_plot=file_umap_grid_plot, data=umap_data,alpha=all_alp)
+
+process_cluster(
+	umap_data=umap_data.loc[
+			(umap_data['UMAP-X'] > 0)	& (umap_data['UMAP-X'] < 13)
+		&   (umap_data['UMAP-Y'] < 8)	& (umap_data['UMAP-Y'] > 4)
+	],
+	matrix=matrix,
+	label='alpha',
+	alpha=0.8
+)
+bravo_data = umap_data.loc[
+		(umap_data['UMAP-X'] > 150)	& (umap_data['UMAP-X'] < 160)
+	&   (umap_data['UMAP-Y'] > 18)	& (umap_data['UMAP-Y'] < 21)
+]
+process_cluster(
+	umap_data=bravo_data,
+	matrix=matrix,
+	label='bravo',
+	alpha=0.2
+)
+process_cluster(
+	umap_data=umap_data.loc[
+			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.2)
+		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.25)
+	],
+	matrix=matrix,
+	label='charlie',
+	alpha=0.8
+)
+delta_data = umap_data.loc[
+			(umap_data['UMAP-X'] >= 154.4)	& (umap_data['UMAP-X'] <= 154.8)
+		&   (umap_data['UMAP-Y'] >= 19.80)	& (umap_data['UMAP-Y'] <= 19.95)
+	]
+process_cluster(
+	umap_data=delta_data,
+	matrix=matrix,
+	label='delta',
+	alpha=0.8
+)
+label='bravo'
+file_label_low_alp = folder.joinpath(f'{name}_{label}_a{all_alp}.tiff')
+if not file_label_low_alp.exists():
+	print(f'replotting {label} with low alp')
+	plot_umap(
+		file_plot=file_label_low_alp,
+		data=bravo_data,
+		alpha=all_alp
+	)
+
+
+
+echo_data = umap_data.loc[
+			(umap_data['UMAP-X'] >= 155.6)	& (umap_data['UMAP-X'] <= 156.4)
+		&   (umap_data['UMAP-Y'] >= 19.50)	& (umap_data['UMAP-Y'] <= 19.80)
+	]
+process_cluster(
+	umap_data=echo_data,
+	matrix=matrix,
+	label='echo',
+	alpha=0.5
+)
+
+process_cluster(
+	umap_data=umap_data.loc[
+			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.3)
+		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.3)
+	],
+	matrix=matrix,
+	label='fox',
+	alpha=0.5
+)

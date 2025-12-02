@@ -42,9 +42,6 @@ for file in files:
 	if not file.exists():
 		raise FileNotFoundError(f'missing file {file}')
 
-# Load the subset frame and get all usernames
-# use pd.Categorical to get user categorical codes
-# use pd.Categorical to get anime categorical codes
 frame_subset = pd.read_csv(file_frame_subset, index_col='INDEX')
 cat_user = pd.Categorical(frame_subset['username'])
 cat_anime = pd.Categorical(frame_subset['anime_id'])
@@ -54,11 +51,11 @@ cat_anime = pd.Categorical(frame_subset['anime_id'])
 matrix = load_npz(folder.joinpath('dataset.npz'))
 _mshape = matrix.shape
 if (_mshape[0] != cat_user.categories.shape[0]) or (_mshape[1] != cat_anime.categories.shape[0]):
-	print('matri shape',matrix.shape)
+	print('matrix shape',matrix.shape)
 	print('cat users',cat_user.categories.shape[0])
 	print('cat anime',cat_anime.categories.shape[0])
-	raise Exception('Categories and matrix shape are not the same. This is old data with an overly sparse matrix..')
-pass
+	print('Categories and matrix shape are not the same. This is old data with an overly sparse matrix..')
+
 print('loading umap data')
 umap_data = pd.read_csv(file_umap_result)
 alpha_umap = umap_data.loc[

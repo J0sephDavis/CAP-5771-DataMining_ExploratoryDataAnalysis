@@ -66,7 +66,7 @@ print('loading anime dataset')
 anime_lit = pd.read_csv(file_anime_list, usecols=['anime_id','title','score','rank'])
 
 
-def process_cluster(umap_data:pd.DataFrame, matrix:csr_matrix, label:str, alpha:float=0.5):
+def process_cluster(umap_data:pd.DataFrame, matrix:csr_matrix, label:str, alpha:List[float]=[0.5]):
 	print('process_cluster: ', label)
 	''' matrix: entire csr
 		umap: subset of data.
@@ -92,86 +92,114 @@ def process_cluster(umap_data:pd.DataFrame, matrix:csr_matrix, label:str, alpha:
 		print('saving cluster dataset')
 		c_frame.to_csv(file_cluster_umap,index=False)
 		pass
+	for a in alpha:
+		file_plot = folder.joinpath(f'{name}_{label}_a{a}_cluster.tiff')
+		if not file_plot.exists():
+			print(f'plotting cluster {file_plot}')
+			plot_umap(file_plot=file_plot, data=umap_data, alpha=a)
 
-	file_plot = folder.joinpath(f'{name}_{label}_cluster.tiff')
-	if not file_plot.exists():
-		print('plotting cluster')
-		plot_umap(file_plot=file_plot, data=umap_data, alpha=alpha)
-
-# UCS st 9 f 0.1 bin true drop true folder:'/home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/__UCS score_9 frac_0.1 bin_True drop_True'  name:'umap m_jaccard n_1024 d_0.0'
-all_alp=0.05
+all_alp=0.3
 file_umap_grid_plot = folder.joinpath(f'{name}_WITH_GRID_a{all_alp}.tiff')
 if not file_umap_grid_plot.exists():
 	print('replotting umap data with grid')
 	plot_umap(file_plot=file_umap_grid_plot, data=umap_data,alpha=all_alp)
 
-process_cluster(
-	umap_data=umap_data.loc[
-			(umap_data['UMAP-X'] > 0)	& (umap_data['UMAP-X'] < 13)
-		&   (umap_data['UMAP-Y'] < 8)	& (umap_data['UMAP-Y'] > 4)
-	],
-	matrix=matrix,
-	label='alpha',
-	alpha=0.8
-)
-bravo_data = umap_data.loc[
-		(umap_data['UMAP-X'] > 150)	& (umap_data['UMAP-X'] < 160)
-	&   (umap_data['UMAP-Y'] > 18)	& (umap_data['UMAP-Y'] < 21)
-]
-process_cluster(
-	umap_data=bravo_data,
-	matrix=matrix,
-	label='bravo',
-	alpha=0.2
-)
-process_cluster(
-	umap_data=umap_data.loc[
-			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.2)
-		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.25)
-	],
-	matrix=matrix,
-	label='charlie',
-	alpha=0.8
-)
-delta_data = umap_data.loc[
-			(umap_data['UMAP-X'] >= 154.4)	& (umap_data['UMAP-X'] <= 154.8)
-		&   (umap_data['UMAP-Y'] >= 19.80)	& (umap_data['UMAP-Y'] <= 19.95)
-	]
-process_cluster(
-	umap_data=delta_data,
-	matrix=matrix,
-	label='delta',
-	alpha=0.8
-)
-label='bravo'
-file_label_low_alp = folder.joinpath(f'{name}_{label}_a{all_alp}.tiff')
-if not file_label_low_alp.exists():
-	print(f'replotting {label} with low alp')
-	plot_umap(
-		file_plot=file_label_low_alp,
-		data=bravo_data,
-		alpha=all_alp
-	)
+def replot_with_alp(label:str, data:pd.DataFrame):
+	file_label_low_alp = folder.joinpath(f'{name}_{label}_a{all_alp}.tiff')
+	if not file_label_low_alp.exists():
+		print(f'replotting {label} with low alp')
+		plot_umap(
+			file_plot=file_label_low_alp,
+			data=data,
+			alpha=all_alp
+		)
 
+# folder: /home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/UCS score_8 frac_0.03 bin_False drop_True
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] > 6) & (umap_data['UMAP-X'] < 15)
+# 		&   (umap_data['UMAP-Y'] > 37) & (umap_data['UMAP-Y'] < 48)
+# 	],
+# 	matrix=matrix,
+# 	label='alpha',
+# 	alpha=[0.01,0.05,0.1,0.01,0.005]
+# )
 
+# folder: /home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/UCS score_7 frac_0.03 bin_False drop_True name: umap m_jaccard n_1024 d_0.0
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] < -42)
+# 		&   (umap_data['UMAP-Y'] < -3)
+# 	],
+# 	matrix=matrix,
+# 	label='alpha',
+# 	alpha=[0.01,0.05,0.1,0.01,0.005]
+# )
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] > -42) & (umap_data['UMAP-X'] < -33)
+# 		&   (umap_data['UMAP-Y'] < -3)
+# 	],
+# 	matrix=matrix,
+# 	label='bravo',
+# 	alpha=[0.5,0.1]
+# )
 
-echo_data = umap_data.loc[
-			(umap_data['UMAP-X'] >= 155.6)	& (umap_data['UMAP-X'] <= 156.4)
-		&   (umap_data['UMAP-Y'] >= 19.50)	& (umap_data['UMAP-Y'] <= 19.80)
-	]
-process_cluster(
-	umap_data=echo_data,
-	matrix=matrix,
-	label='echo',
-	alpha=0.5
-)
-
-process_cluster(
-	umap_data=umap_data.loc[
-			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.3)
-		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.3)
-	],
-	matrix=matrix,
-	label='fox',
-	alpha=0.5
-)
+# UCS st 9 f 0.1 bin true drop true folder:'/home/joseph/Desktop/BARC1447_SHARED/18 UMAP Exploration/__UCS score_9 frac_0.1 bin_True drop_True'  name:'umap m_jaccard n_1024 d_0.0'
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] > 0)	& (umap_data['UMAP-X'] < 13)
+# 		&   (umap_data['UMAP-Y'] < 8)	& (umap_data['UMAP-Y'] > 4)
+# 	],
+# 	matrix=matrix,
+# 	label='alpha',
+# 	alpha=0.8
+# )
+# bravo_data = umap_data.loc[
+# 		(umap_data['UMAP-X'] > 150)	& (umap_data['UMAP-X'] < 160)
+# 	&   (umap_data['UMAP-Y'] > 18)	& (umap_data['UMAP-Y'] < 21)
+# ]
+# process_cluster(
+# 	umap_data=bravo_data,
+# 	matrix=matrix,
+# 	label='bravo',
+# 	alpha=0.2
+# )
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.2)
+# 		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.25)
+# 	],
+# 	matrix=matrix,
+# 	label='charlie',
+# 	alpha=0.8
+# )
+# delta_data = umap_data.loc[
+# 			(umap_data['UMAP-X'] >= 154.4)	& (umap_data['UMAP-X'] <= 154.8)
+# 		&   (umap_data['UMAP-Y'] >= 19.80)	& (umap_data['UMAP-Y'] <= 19.95)
+# 	]
+# process_cluster(
+# 	umap_data=delta_data,
+# 	matrix=matrix,
+# 	label='delta',
+# 	alpha=0.8
+# )
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 		(umap_data['UMAP-X'] >= 155.6)	& (umap_data['UMAP-X'] <= 156.4)
+# 	&   (umap_data['UMAP-Y'] >= 19.50)	& (umap_data['UMAP-Y'] <= 19.80)
+# 	],
+# 	matrix=matrix,
+# 	label='echo',
+# 	alpha=0.5
+# )
+# process_cluster(
+# 	umap_data=umap_data.loc[
+# 			(umap_data['UMAP-X'] >= 152.8)	& (umap_data['UMAP-X'] <= 153.3)
+# 		&   (umap_data['UMAP-Y'] >= 20.10)	& (umap_data['UMAP-Y'] <= 20.3)
+# 	],
+# 	matrix=matrix,
+# 	label='fox',
+# 	alpha=0.5
+# )
+# replot_with_alp(label='bravo',data=bravo_data)

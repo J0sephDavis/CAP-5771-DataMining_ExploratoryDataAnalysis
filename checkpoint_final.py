@@ -20,7 +20,7 @@ from RankingList.contentcontent import UserContentScore
 import umap
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing import Optional,Tuple,List
+from typing import Optional,Tuple,List,Dict,Union
 from pathlib import Path
 
 import gc
@@ -34,49 +34,45 @@ def mass_analysis(score_gte:int, score_lte:int,
 		score_max=score_gte,
 		score_min=score_lte,
 		frac=frac,
-		drop_below_threshold=drop_below_threshold,
 		parent_folder=root_folder
 	)
 	del ulf
 	gc.collect()
-	
-	could_not_complete:List[Tuple[Tuple,BaseException]] = []
+	arguments:List[Dict] = []
+	for m in metrics:
+		for n in neighbors:
+			for d in dist:
+				if d is None:
+					d = 0.0
+				arguments.append({
+					'n_neighbors':n,
+					'min_dist':d,
+					'metric':m
+				})
+	could_not_complete:List[Tuple[Dict,BaseException]] = []
 	interrupted:bool = False
 	s = stopwatch.Stopwatch()
-	for m in metrics:
+	for arg in arguments:
 		if interrupted:
 			break
-		for n in neighbors:
-			if interrupted:
-				break
-			for d in dist:
-				if interrupted:
-					break
-				if d is None:
-					d = 0.0 # default to 0
-
-				_logger.info(f'starting umap with dist:{dist} n:{n} metric:{m}')
-				s.start()
-				try:
-					ucs.run_umap(
-						n_neighbors=n,
-						min_dist=d,
-						metric=m
-					)
-				except KeyboardInterrupt:
-					_logger.info('keyboard interrupt. attempting to quit.')
-					interrupted=True
-				except BaseException as e:
-					_logger.error(f'Could not complete umap... Wait for report after we run the rest.\n{e}')
-					could_not_complete.append(((dist,n,m),e))
-				finally:
-					plt.close('all')
-					gc.collect()
-					s.end()
-					_logger.info(f'mass analysis iteration took {str(s)}')
+		_logger.debug(f'mass_analysis, arg={arg}')
+		s.start()
+		try:
+			ucs.run_umap(**arg)
+		except KeyboardInterrupt:
+			_logger.info('keyboard interrupt. attempting to quit.')
+			interrupted=True
+		except BaseException as e:
+			_logger.error(f'Could not complete umap... Wait for report after we run the rest.\n{e}')
+			could_not_complete.append(((arg),e))
+		finally:
+			plt.close('all')
+			gc.collect()
+			s.end()
+			_logger.info(f'mass analysis iteration took {str(s)}')
 	# Dump errors
 	for rec in could_not_complete:
-		_logger.error(f'dist:{rec[0][0]} neigh:{rec[0][1]} metrc:{rec[0][2]}.. Failed {str(rec[1])}',exc_info=rec[1])
+		_logger.error(f'{rec[0]}.. Failed {str(rec[1])}',exc_info=rec[1])
 	return interrupted
 	
 def main():

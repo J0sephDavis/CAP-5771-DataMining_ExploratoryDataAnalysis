@@ -25,14 +25,14 @@ from pathlib import Path
 
 import gc
 
-def mass_analysis(score_threshold:int, drop_below_threshold:bool,
-				  frac:float, root_folder:Path, binary:bool,
+def mass_analysis(score_gte:int, score_lte:int,
+				  frac:float, root_folder:Path,
 				  neighbors:List, metrics:List, dist:List):
 	ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
 	ucs=UserContentScore(
 		filter=ulf,
-		binary=binary,
-		score_threshold_gt=score_threshold,
+		score_max=score_gte,
+		score_min=score_lte,
 		frac=frac,
 		drop_below_threshold=drop_below_threshold,
 		parent_folder=root_folder
@@ -84,19 +84,23 @@ def main():
 
 	folder.mkdir(mode=0o775, exist_ok=True, parents=True)
 	s= stopwatch.Stopwatch()
-	neighbors = [32]
-	frac_data = 0.05
-	for t in [7,8,9,5]:
-		_logger.info(f'score threshold: {t}')
+	thresholds:List[Tuple[int,int]] = [
+		(1,4), (5,6), (7,8), (9,10)
+	]
+	for score_min, score_max in thresholds:
+		_logger.info(f'score threshold: [{score_min},{score_max}]')
 		s.start()
-		if mass_analysis( # BINARY no-drop @5
-				score_threshold=t, frac=frac_data,
-				drop_below_threshold=True,
+		if mass_analysis(
+				score_gte=score_min, score_lte=score_max,
+				frac=0.05,
 				root_folder=folder,
-				binary=False, # It will convert the data on it own. No need for this setting
-				neighbors=neighbors,
-				metrics=['hamming'],
-				dist=[None]):
+				neighbors=[32],
+				metrics=['hamming','jaccard'],
+				dist=[None]
+			):
+			s.end()
+			_logger.info(f'mass_anlysis (INTERUPTED) took: {str(s)}')
 			return
-		s.end()
-		_logger.info(f'mass_anlysis took: {str(s)}')
+		else:
+			s.end()
+			_logger.info(f'mass_anlysis took: {str(s)}')

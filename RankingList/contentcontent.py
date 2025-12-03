@@ -48,10 +48,9 @@ class UserContentScore():
 	username_codes:pd.Categorical
 	item_codes:pd.Categorical
 
-	is_binary:bool
-	score_threshold:int
+	score_min:int
+	score_max:int
 	frac:float # The fraction of the dataset loaded.
-	drop_below_threshold:bool
 	
 	folder:Path
 	name:str
@@ -59,32 +58,41 @@ class UserContentScore():
 	file_frame:Path
 
 	def get_name(self):
-		return f'UCS score_{self.score_threshold} frac_{self.frac} bin_{self.is_binary} drop_{self.drop_below_threshold}'
+		return f'UCS score_{self.score_min}_{self.score_max} frac_{self.frac}'
 
 	@staticmethod
-	def get_frame_sample(filter:UserListFilter, frac:float)->pd.DataFrame:
+	def get_frame_sample(filter:UserListFilter, frac:float, score_min:int, score_max:int)->pd.DataFrame:
+		'''Fraction is of the already filtered(score [lte,gte]) frame.'''
 		filter_frame = filter.get_frame()
-		og = filter_frame.shape
-		_logger.debug(f'get_frame_sample original shape: {og}')
-		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().sample(frac=frac,axis='index').copy()
-		new = frame.shape
-		_logger.info(f'get_frame_sample reduced by {og[0]-new[0]} rows. Rows:{new[0]}')
+		og_rows = filter_frame.shape[0]
+		_logger.debug(f'get_frame_sample original shape: {og_rows}')
+
+		mask_score_range = (
+			(filter_frame[UserRankingColumn.SCORE] >= score_min)
+			& (filter_frame[UserRankingColumn.SCORE] <= score_max)
+		)
+		filter_frame.drop(filter_frame.loc[~mask_score_range].index,inplace=True)
+		new_rows = filter_frame.shape[0]
+		_logger.debug(f'Removed {og_rows-new_rows} records which do not match score filter.')
+		
+		og_rows=filter_frame.shape[0]
+		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates().sample(frac=frac,axis='index').copy()
+		new_rows=frame.shape[0]
+		_logger.info(f'Sampled {og_rows-new_rows} rows.')
 		return frame
 
-	def __init__(self, filter:UserListFilter, binary:bool,
-			  score_threshold_gt:int, drop_below_threshold:bool,
+	def __init__(self, filter:UserListFilter,
+			  score_min:int, score_max:int,
 			  frac:float, parent_folder:Path) -> None:
 		'''
 		parent_folder: the folder above the folder which will contains this data.
 			- e.g., parent_folder='foobar' we will store data in foobar/$NAME
-		
 		'''
 		sw = stopwatch.Stopwatch()
 		# 0. save args
-		self.score_threshold = score_threshold_gt
-		self.drop_below_threshold = drop_below_threshold
+		self.score_max = score_max
+		self.score_min = score_min
 		self.frac = frac
-		self.is_binary = binary
 		# 1. mkdir RUN_ID
 		self.name = self.get_name()
 		self.folder = parent_folder.joinpath(self.name)
@@ -97,45 +105,33 @@ class UserContentScore():
 		if self.file_dataset.exists():
 			_logger.info(f'Loading {self.file_dataset}')
 			self.data_matrix = load_npz(self.file_dataset)
+
+			# TODO check if these files exist. If not load the filter_frame & regenerate them.
 			with open(file_username_codes,'rb') as f:
 				self.username_codes = pickle.load(f)
 			with open(file_anime_codes,'rb') as f:
 				self.item_codes = pickle.load(f)
 		# 3. else process data and save.
 		else:
-			sw.start()
-			frame = UserContentScore.get_frame_sample(filter, self.frac)
-			series_above_fiter = (frame[UserRankingColumn.SCORE] > score_threshold_gt)
-			if self.is_binary:
-				_logger.debug('binary data')
-				frame['TEMP_BINARY'] = 0
-				frame.loc[series_above_fiter, ['TEMP_BINARY']] = 1
-				frame.drop(columns=[UserRankingColumn.SCORE], inplace=True)
-				frame.rename(columns={'TEMP_BINARY':UserRankingColumn.SCORE},inplace=True)
-			else: # Set all values not meeting threshold to 0 & then subtract values that did by the threshold.
-				_logger.debug('non-binary data')
-				frame.loc[~series_above_fiter, [UserRankingColumn.SCORE]]=0 # Values which did not reach threshold are 0.
-				frame.loc[series_above_fiter,[UserRankingColumn.SCORE]]-=score_threshold_gt # Shift values
-			if self.drop_below_threshold:
-				_logger.debug('drop below theshold')
-				frame.drop(index=frame.loc[~series_above_fiter].index, inplace=True)
-			sw.end()
-			_logger.debug(f'shape after processing: {frame.shape}. STOPWATCH: {str(sw)}')
+			frame = UserContentScore.get_frame_sample(filter=filter, frac=self.frac, score_min=score_max, score_max=score_min)
 
 			sw.start()
+			# Reencode Usernames
 			self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
 			file_username_codes.unlink(missing_ok=True)
 			with open(file_username_codes,'wb') as f:
 				pickle.dump(self.username_codes,f)
-			
+			# Reencode Anime
 			self.item_codes = pd.Categorical(frame[UserRankingColumn.ANIME_ID])
 			file_anime_codes.unlink(missing_ok=True)
 			with open(file_anime_codes,'wb') as f:
 				pickle.dump(self.item_codes, f)
-			sw.end()
-			_logger.debug(f'saving categorical data took: {str(sw)}')
+			# Copy to frame for ease of use later.
 			frame[UserRankingColumn.ANIME_ID + '_code'] = self.item_codes.codes
 			frame[UserRankingColumn.USERNAME + '_code'] = self.username_codes.codes
+			sw.end()
+			_logger.debug(f'saving categorical data took: {str(sw)}')
+			# Create the csr matrix
 			sw.start()
 			self.data_matrix = csr_matrix(
 				(frame[UserRankingColumn.SCORE], # A 1-D array of values
@@ -148,10 +144,7 @@ class UserContentScore():
 			)
 			sw.end()
 			_logger.info(f'Generating {self.name} matrix took: {str(sw)}')
-			sw.start()
 			self.save_matrix_data()
-			sw.end()
-			_logger.info(f'Saving matrix took: {str(sw)}')
 			sw.start()
 			frame.to_csv(self.file_frame,index_label='INDEX')
 			sw.end()
@@ -161,7 +154,11 @@ class UserContentScore():
 		return self.data_matrix
 	
 	def save_matrix_data(self):
+		sw = stopwatch.Stopwatch()
+		sw.start()
 		save_npz(file=self.file_dataset, matrix=self.get_matrix())
+		sw.end()
+		_logger.info(f'Saving matrix took: {str(sw)}')
 	
 	def run_umap(self, n_neighbors:int, min_dist:float,metric:str):
 		''' Generate and plot umap data (if it doesnt exist already)'''

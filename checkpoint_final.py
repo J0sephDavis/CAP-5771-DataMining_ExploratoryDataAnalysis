@@ -6,6 +6,7 @@ GOAL: get two pages worth of content?
 		- For sum of x in A & B x_a.rating-x_b.rating
 			- average difference in ratings?
 '''
+from helpers import stopwatch
 from helpers.context import (
 	get_env_val_safe,
 	EnvFields,
@@ -41,6 +42,7 @@ def mass_analysis(score_threshold:int, drop_below_threshold:bool,
 	
 	could_not_complete:List[Tuple[Tuple,BaseException]] = []
 	interrupted:bool = False
+	s = stopwatch.Stopwatch()
 	for m in metrics:
 		if interrupted:
 			break
@@ -54,6 +56,7 @@ def mass_analysis(score_threshold:int, drop_below_threshold:bool,
 					d = 0.0 # default to 0
 
 				_logger.info(f'starting umap with dist:{dist} n:{n} metric:{m}')
+				s.start()
 				try:
 					ucs.run_umap(
 						n_neighbors=n,
@@ -69,27 +72,31 @@ def mass_analysis(score_threshold:int, drop_below_threshold:bool,
 				finally:
 					plt.close('all')
 					gc.collect()
+					s.end()
+					_logger.info(f'mass analysis iteration took {str(s)}')
 	# Dump errors
 	for rec in could_not_complete:
 		_logger.error(f'dist:{rec[0][0]} neigh:{rec[0][1]} metrc:{rec[0][2]}.. Failed {str(rec[1])}',exc_info=rec[1])
 	return interrupted
 	
-
 def main():
 	folder =Path('18 UMAP Exploration')
 
 	folder.mkdir(mode=0o775, exist_ok=True, parents=True)
-
-	neighbors = [1024]
-	frac_data = 0.1
+	s= stopwatch.Stopwatch()
+	neighbors = [32]
+	frac_data = 0.05
 	for t in [7,8,9,5]:
-		_logger.info('perform binary analysis')
+		_logger.info(f'score threshold: {t}')
+		s.start()
 		if mass_analysis( # BINARY no-drop @5
 				score_threshold=t, frac=frac_data,
 				drop_below_threshold=True,
 				root_folder=folder,
-				binary=False,
+				binary=False, # It will convert the data on it own. No need for this setting
 				neighbors=neighbors,
-				metrics=['cosine'],
+				metrics=['hamming'],
 				dist=[None]):
 			return
+		s.end()
+		_logger.info(f'mass_anlysis took: {str(s)}')

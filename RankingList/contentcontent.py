@@ -40,6 +40,7 @@ _logger = _logging.getLogger(f'{APP_LOGGER_NAME}.RankingList.ContentContent')
 import umap
 import numpy as np
 import pickle
+from helpers import stopwatch
 
 class UserContentScore():
 	''' A sparse matrix of user-content scores '''
@@ -78,6 +79,7 @@ class UserContentScore():
 			- e.g., parent_folder='foobar' we will store data in foobar/$NAME
 		
 		'''
+		sw = stopwatch.Stopwatch()
 		# 0. save args
 		self.score_threshold = score_threshold_gt
 		self.drop_below_threshold = drop_below_threshold
@@ -101,6 +103,7 @@ class UserContentScore():
 				self.item_codes = pickle.load(f)
 		# 3. else process data and save.
 		else:
+			sw.start()
 			frame = UserContentScore.get_frame_sample(filter, self.frac)
 			series_above_fiter = (frame[UserRankingColumn.SCORE] > score_threshold_gt)
 			if self.is_binary:
@@ -116,8 +119,10 @@ class UserContentScore():
 			if self.drop_below_threshold:
 				_logger.debug('drop below theshold')
 				frame.drop(index=frame.loc[~series_above_fiter].index, inplace=True)
-			_logger.debug(f'shape after processing: {frame.shape}')
+			sw.end()
+			_logger.debug(f'shape after processing: {frame.shape}. STOPWATCH: {str(sw)}')
 
+			sw.start()
 			self.username_codes = pd.Categorical(frame[UserRankingColumn.USERNAME])
 			file_username_codes.unlink(missing_ok=True)
 			with open(file_username_codes,'wb') as f:
@@ -127,10 +132,10 @@ class UserContentScore():
 			file_anime_codes.unlink(missing_ok=True)
 			with open(file_anime_codes,'wb') as f:
 				pickle.dump(self.item_codes, f)
-			
+			sw.end()
+			_logger.debug(f'saving categorical data took: {str(sw)}')
 			frame[UserRankingColumn.ANIME_ID + '_code'] = self.item_codes.codes
 			frame[UserRankingColumn.USERNAME + '_code'] = self.username_codes.codes
-			sw = Stopwatch()
 			sw.start()
 			self.data_matrix = csr_matrix(
 				(frame[UserRankingColumn.SCORE], # A 1-D array of values
@@ -143,8 +148,14 @@ class UserContentScore():
 			)
 			sw.end()
 			_logger.info(f'Generating {self.name} matrix took: {str(sw)}')
+			sw.start()
 			self.save_matrix_data()
+			sw.end()
+			_logger.info(f'Saving matrix took: {str(sw)}')
+			sw.start()
 			frame.to_csv(self.file_frame,index_label='INDEX')
+			sw.end()
+			_logger.info(f'Saving frame took: {str(sw)}')
 
 	def get_matrix(self):
 		return self.data_matrix
@@ -158,7 +169,7 @@ class UserContentScore():
 		file_data = self.folder.joinpath(f'umap {label}.csv')
 		file_plot = self.folder.joinpath(f'umap {label}.tiff')
 		new_data:bool=False # Used to regenerate graph if it existed but the data had to be redone.
-		
+		sw = stopwatch.Stopwatch()
 		if file_data.exists():
 			_logger.info(f'loading umap data from: {file_data}')
 			umap_data = pd.read_csv(file_data)
@@ -170,12 +181,20 @@ class UserContentScore():
 				min_dist=min_dist,
 				metric=metric
 			)
+			sw.start()
 			embedding = reducer.fit_transform(self.get_matrix())
+			sw.end()
+			_logger.info(f'umap fit_transform took: {str(sw)}')
 			umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
+			_logger.info('saving umap to file')
+			sw.start()
 			umap_data.to_csv(file_data,index=False)
+			sw.end()
+			_logger.info(f'saving to csv took: {str(sw)}')
 		
 		if (not file_plot.exists()) or new_data:
-			_logger.info('plotting umap')
+			sw.start()
+			_logger.info('Graphing umap')
 			f,ax = plt.subplots()
 			sns.scatterplot(ax=ax,
 				x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
@@ -184,7 +203,12 @@ class UserContentScore():
 			)
 			f.set_size_inches(10,10)
 			f.set_dpi(500)
+			sw.end()
+			_logger.info(f'creating graph took: {str(sw)}')
+			sw.start()
 			f.savefig(file_plot)
+			sw.end()
+			_logger.info(f'saving graph took: {str(sw)}')
 			plt.close(fig=f)
 		else:
 			_logger.info('skipping. no need to plot.')

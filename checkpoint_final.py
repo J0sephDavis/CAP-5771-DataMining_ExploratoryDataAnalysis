@@ -83,20 +83,22 @@ def main():
 	thresholds:List[Tuple[int,int]] = [
 		(1,4), (5,6), (7,8), (9,10)
 	]
-	for score_min, score_max in thresholds:
-		_logger.info(f'score threshold: [{score_min},{score_max}]')
-		s.start()
-		if mass_analysis(
-				score_gte=score_min, score_lte=score_max,
-				frac=0.05,
-				root_folder=folder,
-				neighbors=[32],
-				metrics=['hamming','jaccard'],
-				dist=[None]
-			):
-			s.end()
-			_logger.info(f'mass_anlysis (INTERUPTED) took: {str(s)}')
-			return
-		else:
-			s.end()
-			_logger.info(f'mass_anlysis took: {str(s)}')
+	fracs = [0.05,0.1,0.5]
+	for frac in fracs:
+		for score_min, score_max in thresholds:
+			_logger.info(f'score threshold: [{score_min},{score_max}], frac:{frac}')
+			s.start()
+			if mass_analysis(
+					score_gte=score_min, score_lte=score_max,
+					frac=frac,
+					root_folder=folder,
+					neighbors=[32,1024,2048],
+					metrics=['hamming','jaccard'],
+					dist=[None]
+				):
+				s.end()
+				_logger.info(f'mass_anlysis (INTERUPTED) took: {str(s)}')
+				return
+			else:
+				s.end()
+				_logger.info(f'mass_anlysis took: {str(s)}')

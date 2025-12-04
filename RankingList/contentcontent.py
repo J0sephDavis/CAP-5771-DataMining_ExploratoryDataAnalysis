@@ -174,12 +174,11 @@ class UserContentScore():
 		else:
 			new_data=True
 			_logger.info(f'Plotting UMAP {label}')
-			with open(file='umap_progress_bar.log', mode='w', errors='ignore') as f:
-				reducer = umap.UMAP(
-					n_neighbors=n_neighbors,
-					min_dist=min_dist,
-					metric=metric, tqdm_kwds={'file':f, 'disable':False}
-				)
+			reducer = umap.UMAP(
+				n_neighbors=n_neighbors,
+				min_dist=min_dist,
+				metric=metric
+			)
 			sw.start()
 			embedding = reducer.fit_transform(self.get_matrix())
 			sw.end()

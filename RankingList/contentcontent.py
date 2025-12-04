@@ -76,7 +76,8 @@ class UserContentScore():
 		_logger.debug(f'Removed {og_rows-new_rows} records which do not match score filter.')
 		
 		og_rows=filter_frame.shape[0]
-		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates().sample(frac=frac,axis='index').copy()
+		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates()\
+			.sample(frac=frac,axis='index').copy()
 		new_rows=frame.shape[0]
 		_logger.info(f'Sampled {og_rows-new_rows} rows.')
 		return frame

@@ -76,8 +76,7 @@ class UserContentScore():
 		_logger.debug(f'Removed {og_rows-new_rows} records which do not match score filter.')
 		
 		og_rows=filter_frame.shape[0]
-		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates()\
-			.sample(frac=frac,axis='index').copy()
+		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates().sample(frac=frac,axis='index').copy()
 		new_rows=frame.shape[0]
 		_logger.info(f'Sampled {og_rows-new_rows} rows.')
 		return frame
@@ -174,11 +173,12 @@ class UserContentScore():
 		else:
 			new_data=True
 			_logger.info(f'Plotting UMAP {label}')
-			reducer = umap.UMAP(
-				n_neighbors=n_neighbors,
-				min_dist=min_dist,
-				metric=metric
-			)
+			with open(file='umap_progress_bar.log', mode='w', errors='ignore') as f:
+				reducer = umap.UMAP(
+					n_neighbors=n_neighbors,
+					min_dist=min_dist,
+					metric=metric, tqdm_kwds={'file':f, 'disable':False}
+				)
 			sw.start()
 			embedding = reducer.fit_transform(self.get_matrix())
 			sw.end()

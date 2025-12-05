@@ -178,7 +178,10 @@ def main():
 	for n in neighbors:
 		for min,max in thresholds:
 			_logger.info(f'min_{min}\tmax_{max}\tneighbors_{n}')
-			run_umap(neighbors=n,min=min,max=max)
+			try:
+				run_umap(neighbors=n,min=min,max=max)
+			except BaseException as e:
+				_logger.error('map failed:', exc_info=e)
 	gc.collect()
 	# 3. Choose a random user in the dataset and record their nearest neighbors at each score level:
 	# 	- [USER_ID, DIST_A, DIST_B, DIST_C, DIST_D] # Where DIST_A would be the distance of the USER_ID from our selected user in the (1,4) graph.

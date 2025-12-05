@@ -137,11 +137,12 @@ def main():
 		file_subsets = file_data_subset(min,max)
 		if file_subsets.exists():
 			continue
+		_logger.debug(f'create threshold subset: {min} {max}')
 		matrix:csr_matrix = dataset.copy()
 		mask = matrix.data < min
-		matrix[mask] = 0
+		matrix.data[mask] = 0
 		mask = matrix.data > max
-		matrix[mask] = 0
+		matrix.data[mask] = 0
 		matrix.eliminate_zeros()
 		save_npz(file_data_subset(min,max), matrix)
 		del matrix,mask,file_subsets
@@ -152,7 +153,7 @@ def main():
 	sw = stopwatch.Stopwatch()
 
 	def run_umap(neighbors:int,min:int,max:int):
-		label:str = f'jaccard n_{neighbors}'
+		label:str = f'jaccard score_{min}_{max} n_{neighbors}'
 		file_umapdata = folder.joinpath(f'umap {label}.csv')
 		if file_umapdata.exists():
 			_logger.info(f'Load prev UMAP {label}')

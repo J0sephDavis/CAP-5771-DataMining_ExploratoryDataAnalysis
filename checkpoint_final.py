@@ -108,7 +108,7 @@ def mass_umap_exploration():
 				s.end()
 				_logger.info(f'mass_anlysis took: {str(s)}')
 def main():
-	mass_umap_exploration() # Just explore a ton of variations
+	# mass_umap_exploration() # Just explore a ton of variations
 	folder = Path('19 UMAP User Case Study')
 	file_dataset = folder.joinpath('dataset.npz')
 	folder.mkdir(mode=0o775, parents=False,exist_ok=True)
@@ -125,7 +125,7 @@ def main():
 			filter=ulf,
 			score_max=10,
 			score_min=1,
-			frac=0.1,
+			frac=0.05,
 			parent_folder=folder
 		)
 		dataset = ucs.get_matrix()

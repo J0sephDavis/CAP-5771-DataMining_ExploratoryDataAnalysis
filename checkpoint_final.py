@@ -22,12 +22,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Optional,Tuple,List,Dict,Union
 from pathlib import Path
+from scipy.sparse import csr_matrix, save_npz, load_npz
+import umap
 
 import gc
 
 def mass_analysis(score_gte:int, score_lte:int,
 				  frac:float, root_folder:Path,
-				  neighbors:List, metrics:List, dist:List):
+				  neighbors:List, metrics:List,
+				  dist:List, do_plot:bool):
 	ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
 	ucs=UserContentScore(
 		filter=ulf,
@@ -47,7 +50,8 @@ def mass_analysis(score_gte:int, score_lte:int,
 				arguments.append({
 					'n_neighbors':n,
 					'min_dist':d,
-					'metric':m
+					'metric':m,
+					'do_plot':do_plot
 				})
 	could_not_complete:List[Tuple[Dict,BaseException]] = []
 	interrupted:bool = False
@@ -94,7 +98,8 @@ def mass_umap_exploration():
 					root_folder=folder,
 					neighbors=[32,1024,2048],
 					metrics=['hamming','jaccard'],
-					dist=[None]
+					dist=[None],
+					do_plot=True
 				):
 				s.end()
 				_logger.info(f'mass_anlysis (INTERUPTED) took: {str(s)}')
@@ -104,4 +109,78 @@ def mass_umap_exploration():
 				_logger.info(f'mass_anlysis took: {str(s)}')
 def main():
 	mass_umap_exploration() # Just explore a ton of variations
+	folder = Path('19 UMAP User Case Study')
+	file_dataset = folder.joinpath('dataset.npz')
+	folder.mkdir(mode=0o775, parents=False,exist_ok=True)
+	def file_data_subset(min,max)->Path:
+		return folder.joinpath(f'dataset_{min}_{max}.npz')
+	# - Case Study - 
+	# 1. Sample a larger dataset & make a csr matrix removing only those with score=0
+	dataset:csr_matrix
+	if file_dataset.exists():
+		dataset = load_npz(file_dataset)
+	else:
+		ulf=UserListFilter(frame=None, cols=[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE])
+		ucs=UserContentScore(
+			filter=ulf,
+			score_max=10,
+			score_min=1,
+			frac=0.1,
+			parent_folder=folder
+		)
+		dataset = ucs.get_matrix()
+		del ucs,ulf
+	# 2. Create subsets with scores zeroed outside of the ranges: (1,4), (5,6), (7,8), (9,10)
+	gc.collect()
+	thresholds = [ (1,4), (5,6), (7,8), (9,10) ]
+	for min,max in thresholds:
+		file_subsets = file_data_subset(min,max)
+		if file_subsets.exists():
+			continue
+		matrix:csr_matrix = dataset.copy()
+		mask = matrix.data < min
+		matrix[mask] = 0
+		mask = matrix.data > max
+		matrix[mask] = 0
+		matrix.eliminate_zeros()
+		save_npz(file_data_subset(min,max), matrix)
+		del matrix,mask,file_subsets
+		gc.collect()
+	del dataset
+	gc.collect()
+	
+	sw = stopwatch.Stopwatch()
+
+	def run_umap(neighbors:int,min:int,max:int):
+		label:str = f'jaccard n_{neighbors}'
+		file_umapdata = folder.joinpath(f'umap {label}.csv')
+		if file_umapdata.exists():
+			_logger.info(f'Load prev UMAP {label}')
+			return pd.read_csv(file_umapdata)
+		_logger.info(f'Perf UMAP {label}')
+		reducer = umap.UMAP(
+			n_neighbors=neighbors,
+			metric='jaccard'
+		)
+		sw.start()
+		embedding = reducer.fit_transform(load_npz(file_data_subset(min,max)))
+		sw.end()
+		_logger.info(f'umap fit_transform took: {str(sw)}')
+		umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
+		_logger.debug('saving umap to file')
+		sw.start()
+		umap_data.to_csv(file_umapdata,index=False)
+		sw.end()
+		_logger.debug(f'saving to csv took: {str(sw)}')
+	
+	neighbors = [32,1024]
+	for n in neighbors:
+		for min,max in thresholds:
+			_logger.info(f'min_{min}\tmax_{max}\tneighbors_{n}')
+			run_umap(neighbors=n,min=min,max=max)
+	gc.collect()
+	# 3. Choose a random user in the dataset and record their nearest neighbors at each score level:
+	# 	- [USER_ID, DIST_A, DIST_B, DIST_C, DIST_D] # Where DIST_A would be the distance of the USER_ID from our selected user in the (1,4) graph.
+	# 4. Find the top-n neighbors in the distance matrix for each bin and record [USER_ID,AVG_DIST,MED_DIST]
+	# 5. Replot UMAP with the neighbors colored by AVG/MED_DIST
 	

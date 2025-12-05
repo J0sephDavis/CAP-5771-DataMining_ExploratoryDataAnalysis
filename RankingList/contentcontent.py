@@ -61,10 +61,11 @@ class UserContentScore():
 		return f'UCS score_{self.score_min}_{self.score_max} frac_{self.frac}'
 
 	@staticmethod
-	def get_frame_sample(filter:UserListFilter, frac:float, score_min:int, score_max:int)->pd.DataFrame:
+	def filter_frame_by_score(filter:UserListFilter, score_min:int, score_max:int)->pd.DataFrame:
 		'''Fraction is of the already filtered(score [lte,gte]) frame.'''
 		filter_frame = filter.get_frame()
 		og_rows = filter_frame.shape[0]
+		_logger.debug(f'min:{score_min} max:{score_max}')
 		_logger.debug(f'get_frame_sample original shape: {og_rows}')
 
 		mask_score_range = (
@@ -73,12 +74,14 @@ class UserContentScore():
 		)
 		filter_frame.drop(filter_frame.loc[~mask_score_range].index,inplace=True)
 		new_rows = filter_frame.shape[0]
+		if new_rows == 0: raise RuntimeError('no rows')
 		_logger.debug(f'Removed {og_rows-new_rows} records which do not match score filter.')
 		
 		og_rows=filter_frame.shape[0]
-		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates().sample(frac=frac,axis='index').copy()
+		frame = filter_frame[[UserRankingColumn.USERNAME,UserRankingColumn.ANIME_ID,UserRankingColumn.SCORE]].dropna().drop_duplicates().copy()
+		# .sample(frac=frac,axis='index')
 		new_rows=frame.shape[0]
-		_logger.info(f'Sampled {og_rows-new_rows} rows.')
+		_logger.info(f'Score sample shape {frame.shape}')
 		return frame
 
 	def __init__(self, filter:UserListFilter,

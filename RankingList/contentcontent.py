@@ -102,8 +102,9 @@ class UserContentScore():
 		self.folder.mkdir(mode=0o775, exist_ok=True,parents=True)
 		self.file_dataset = self.folder.joinpath('dataset.npz')
 		self.file_frame = self.folder.joinpath('frame.csv')
-		file_anime_codes = self.folder.joinpath('item_codes.csv')
-		file_username_codes = self.folder.joinpath('username_codes.csv')
+		file_anime_codes = self.folder.joinpath('item_codes.pkl')
+		file_username_codes = self.folder.joinpath('username_codes.pkl')
+		file_sampled_index =  self.folder.joinpath('sampld_index.pkl')
 		# 2. if Dataset.npz exists, load & stop.
 		if self.file_dataset.exists():
 			_logger.info(f'Loading {self.file_dataset}')

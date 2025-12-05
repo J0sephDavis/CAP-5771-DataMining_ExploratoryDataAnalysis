@@ -143,12 +143,12 @@ class UserContentScore():
 				shape=(len(self.username_codes.categories), len(self.item_codes.categories))
 			)
 			sw.end()
-			_logger.info(f'Generating {self.name} matrix took: {str(sw)}')
+			_logger.debug(f'Generating {self.name} matrix took: {str(sw)}')
 			self.save_matrix_data()
 			sw.start()
 			frame.to_csv(self.file_frame,index_label='INDEX')
 			sw.end()
-			_logger.info(f'Saving frame took: {str(sw)}')
+			_logger.debug(f'Saving frame took: {str(sw)}')
 
 	def get_matrix(self):
 		return self.data_matrix
@@ -158,9 +158,9 @@ class UserContentScore():
 		sw.start()
 		save_npz(file=self.file_dataset, matrix=self.get_matrix())
 		sw.end()
-		_logger.info(f'Saving matrix took: {str(sw)}')
+		_logger.debug(f'Saving matrix took: {str(sw)}')
 	
-	def run_umap(self, n_neighbors:int, min_dist:float,metric:str):
+	def run_umap(self, n_neighbors:int, min_dist:float,metric:str, do_plot:bool)->pd.DataFrame:
 		''' Generate and plot umap data (if it doesnt exist already)'''
 		label:str = f'm_{metric} n_{n_neighbors} d_{min_dist}'
 		file_data = self.folder.joinpath(f'umap {label}.csv')
@@ -172,27 +172,26 @@ class UserContentScore():
 			umap_data = pd.read_csv(file_data)
 		else:
 			new_data=True
-			_logger.info(f'Plotting UMAP {label}')
-			with open(file='umap_progress_bar.log', mode='w', errors='ignore') as f:
-				reducer = umap.UMAP(
-					n_neighbors=n_neighbors,
-					min_dist=min_dist,
-					metric=metric, tqdm_kwds={'file':f, 'disable':False}
-				)
+			_logger.info(f'Applying UMAP {label}')
+			reducer = umap.UMAP(
+				n_neighbors=n_neighbors,
+				min_dist=min_dist,
+				metric=metric
+			)
 			sw.start()
 			embedding = reducer.fit_transform(self.get_matrix())
 			sw.end()
 			_logger.info(f'umap fit_transform took: {str(sw)}')
 			umap_data = pd.DataFrame(embedding, columns=['UMAP-X','UMAP-Y'])
-			_logger.info('saving umap to file')
+			_logger.debug('saving umap to file')
 			sw.start()
 			umap_data.to_csv(file_data,index=False)
 			sw.end()
-			_logger.info(f'saving to csv took: {str(sw)}')
+			_logger.debug(f'saving to csv took: {str(sw)}')
 		
-		if (not file_plot.exists()) or new_data:
+		if do_plot and ((not file_plot.exists()) or new_data):
 			sw.start()
-			_logger.info('Graphing umap')
+			_logger.info('Plotting umap')
 			f,ax = plt.subplots()
 			sns.scatterplot(ax=ax,
 				x='UMAP-X', y='UMAP-Y', hue='UMAP-Y',
@@ -202,12 +201,12 @@ class UserContentScore():
 			f.set_size_inches(10,10)
 			f.set_dpi(500)
 			sw.end()
-			_logger.info(f'creating graph took: {str(sw)}')
+			_logger.debug(f'creating graph took: {str(sw)}')
 			sw.start()
 			f.savefig(file_plot)
 			sw.end()
-			_logger.info(f'saving graph took: {str(sw)}')
+			_logger.debug(f'saving graph took: {str(sw)}')
 			plt.close(fig=f)
 		else:
 			_logger.info('skipping. no need to plot.')
-		return
+		return umap_data

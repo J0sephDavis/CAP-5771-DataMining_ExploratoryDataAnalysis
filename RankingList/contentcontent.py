@@ -117,7 +117,7 @@ class UserContentScore():
 				self.item_codes = pickle.load(f)
 		# 3. else process data and save.
 		else:
-			frame = UserContentScore.get_frame_sample(filter=filter, frac=self.frac, score_min=score_max, score_max=score_min)
+			frame = UserContentScore.filter_frame_by_score(filter=filter, score_min=score_min, score_max=score_max)
 
 			sw.start()
 			# Reencode Usernames

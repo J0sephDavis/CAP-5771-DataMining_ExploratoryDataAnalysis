@@ -137,7 +137,7 @@ class UserContentScore():
 			_logger.debug(f'saving categorical data took: {str(sw)}')
 			# Create the csr matrix
 			sw.start()
-			self.data_matrix = csr_matrix(
+			full_matrix = csr_matrix(
 				(frame[UserRankingColumn.SCORE], # A 1-D array of values
 					(
 						self.username_codes.codes, # Same length as the score col. Indicates what row the value belongs to. ROW/indices
@@ -146,8 +146,18 @@ class UserContentScore():
 				),
 				shape=(len(self.username_codes.categories), len(self.item_codes.categories))
 			)
+			rows = full_matrix.shape[0]
+			_logger.info(f'matrix rows before sample: {rows}')
+			sample_index = np.random.choice(rows,size=(int(rows*self.frac)), replace=False)
+			with open(file_sampled_index,'wb') as f:
+				pickle.dump(sample_index, f) # Use username_codes.categories[sample_index] to get the actual usernames
+			self.data_matrix = full_matrix[sample_index].copy()
+			rows = self.data_matrix.shape[0]
+			del full_matrix
+			if rows == 0: raise RuntimeError('no rows')
+			_logger.info(f'matrix rows after sample: {rows}')
 			sw.end()
-			_logger.debug(f'Generating {self.name} matrix took: {str(sw)}')
+			
 			self.save_matrix_data()
 			sw.start()
 			frame.to_csv(self.file_frame,index_label='INDEX')

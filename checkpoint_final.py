@@ -75,7 +75,7 @@ def mass_analysis(score_gte:int, score_lte:int,
 		_logger.error(f'{rec[0]}.. Failed {str(rec[1])}',exc_info=rec[1])
 	return interrupted
 	
-def main():
+def mass_umap_exploration():
 	folder =Path('18 UMAP Exploration')
 
 	folder.mkdir(mode=0o775, exist_ok=True, parents=True)
@@ -102,3 +102,6 @@ def main():
 			else:
 				s.end()
 				_logger.info(f'mass_anlysis took: {str(s)}')
+def main():
+	mass_umap_exploration() # Just explore a ton of variations
+	
